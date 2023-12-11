@@ -1,0 +1,10 @@
+﻿BasicMinimumPatch/source/output
+Gvramtool/source/output
+Patch/source/Patch/.vs
+Patch/source/Patch/Debug
+Patch/source/Patch/Release
+Patch/source/Patch/x64
+Patch/source/Patch/Patch.vcxproj.user
+Patch/source/PatchGUI/.vs
+Patch/source/PatchGUI/bin
+Patch/source/PatchGUI/obj
