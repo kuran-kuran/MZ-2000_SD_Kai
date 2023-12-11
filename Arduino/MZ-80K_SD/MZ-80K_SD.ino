@@ -1045,6 +1045,52 @@ void ConcatFileClose()
     snd1byte(0x00);
 }
 
+// Serial初期化処理
+// 0xE6, bps (2bytes)
+void setupSerial()
+{
+    int bps = 0;
+    int bpsLow = rcv1byte();
+    int bpsHigh = rcv1byte();
+    bps = bpsLow + bpsHigh * 256;
+    Serial.end();
+    Serial.begin(bps);
+}
+
+// Serial書き込み
+// 0xE7, length (1bytes), ... (lengthバイト分)
+void serialWrite()
+{
+    byte length = rcv1byte();
+    for(byte i = 0; i < length; ++ i)
+    {
+        byte data = rcv1byte();
+        Serial.write(data);
+    }
+}
+
+// Serial受信バッファにデータがあるか
+// 0xE8
+// Result: 1byte (バイト数)
+int serialAvailable()
+{
+    byte available = Serial.available();
+    snd1byte(available);
+}
+
+// Serial読み込み
+// 0xE9, length
+// Result: データ (length bytes)
+void serialRead()
+{
+    byte length = rcv1byte();
+    for(byte i = 0; i < length; ++ i)
+    {
+        byte data = Serial.read();
+        snd1byte(data);
+    }
+}
+
 void loop()
 {
   digitalWrite(PB0PIN,LOW);
@@ -1190,6 +1236,32 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         ConcatFileClose();
+        break;
+
+//Serialコマンド
+//0E6hでSerial初期化処理
+      case 0xE6:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        setupSerial();
+        break;
+//0E7hでSerial書き込み
+      case 0xE7:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        serialWrite();
+        break;
+//0E8hでSerial受信バッファにデータがあるか
+      case 0xE8:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        serialAvailable();
+        break;
+//0E9hでSerial読み込み
+      case 0xE9:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        serialRead();
         break;
 
       default:
