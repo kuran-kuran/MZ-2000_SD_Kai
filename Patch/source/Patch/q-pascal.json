@@ -1,0 +1,36 @@
+{
+	"Title": "q-pascal",
+	"Original": "q-pascal",
+	"Create": "q-pascal",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "0414", "Before": ["16,04,21"], "After": "C3,06,F0"},
+		{"Address": "0437", "Before": ["16,08,ED"], "After": "C3,09,F0"},
+		{"Address": "0443", "Before": ["16,08,ED"], "After": "C3,0C,F0"},
+		{"Address": "045E", "Before": ["16,01,21"], "After": "C3,00,F0"},
+		{"Address": "0493", "Before": ["16,02,ED"], "After": "C3,03,F0"},
+		{"Address": "04F3", "Before": ["3E"], "After": "C9"}
+	],
+	"PatchFile":
+	[
+		{
+			"File": "TS-1000.bin",
+			"Address": "0080"
+		},
+		{
+			"File": "WICS.bin",
+			"Address": "1580"
+		},
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_TS-1000_TS-2000_SD/APP_q-Pascal_SD.bin",
+			"File": "APP_TS-1000_TS-2000_SD\\APP_q-Pascal_SD.bin",
+			"Address": "E080"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "E56F"
+	}
+}

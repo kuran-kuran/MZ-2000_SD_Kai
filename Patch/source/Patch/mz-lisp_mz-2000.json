@@ -1,0 +1,28 @@
+{
+	"Title": "MZ-2000 MZ-LISP",
+	"Original": "MZ-2000 MZ-LISP",
+	"Create": "MZ-2000 MZ-LISP",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "012E", "Before": ["01,05,4C"], "After": "C3,A0,12"},
+		{"Address": "02D2", "Before": ["16,01,21"], "After": "C3,20,3F"},
+		{"Address": "0303", "Before": ["16,02,ED"], "After": "C3,23,3F"},
+		{"Address": "030F", "Before": ["16,04,21"], "After": "C3,26,3F"},
+		{"Address": "0333", "Before": ["16,08,ED"], "After": "C3,29,3F"},
+		{"Address": "033F", "Before": ["16,08,ED"], "After": "C3,2C,3F"}
+	],
+	"PatchFile":
+	[
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_BASIC_LISP_SD/APP_BASIC_LISP_SD_MZ-LISP_80B.bin",
+			"File": "APP_BASIC_LISP_SD\\APP_BASIC_LISP_SD_MZ-LISP_2000.bin",
+			"Address": "3FA0"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "4530"
+	}
+}

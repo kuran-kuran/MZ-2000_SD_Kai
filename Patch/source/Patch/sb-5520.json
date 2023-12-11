@@ -1,0 +1,41 @@
+{
+	"Title": "MZ-80B BASIC SB-5520",
+	"Original": "SB-5520",
+	"Create": "SB-5520",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "02D2", "Before": ["16,01,21"], "After": "C3,00,52"},
+		{"Address": "0303", "Before": ["16,02,ED"], "After": "C3,03,52"},
+		{"Address": "030F", "Before": ["16,04,21"], "After": "C3,06,52"},
+		{"Address": "0333", "Before": ["16,08,ED"], "After": "C3,09,52"},
+		{"Address": "033F", "Before": ["16,08,ED"], "After": "C3,0C,52"},
+		{"Address": "1329", "Before": ["FF,49"], "After": "9F,57"},
+		{"Address": "19FF", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1AA2", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1C12", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1C2C", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1C5B", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1C63", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "1DDA", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "2014", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "3CF5", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "3DE3", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "3E06", "Before": ["5E,51"], "After": "A2,57"},
+		{"Address": "3EE5", "Before": ["5C,51"], "After": "A0,57"},
+		{"Address": "3EEB", "Before": ["5C,51"], "After": "A0,57"}
+	],
+	"PatchFile":
+	[
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_BASIC_LISP_SD/APP_BASIC_LISP_SD_SB-5520.bin",
+			"File": "APP_BASIC_LISP_SD\\APP_BASIC_LISP_SD_SB-5520.bin",
+			"Address": "5280"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "5810"
+	}
+}

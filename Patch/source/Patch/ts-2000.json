@@ -1,0 +1,28 @@
+{
+	"Title": "TS-2000",
+	"Original": "TS-2000",
+	"Create": "TS-2000",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "0414", "Before": ["16,04,21"], "After": "C3,06,F0"},
+		{"Address": "0437", "Before": ["16,08,ED"], "After": "C3,09,F0"},
+		{"Address": "0443", "Before": ["16,08,ED"], "After": "C3,0C,F0"},
+		{"Address": "045E", "Before": ["16,01,21"], "After": "C3,00,F0"},
+		{"Address": "0493", "Before": ["16,02,ED"], "After": "C3,03,F0"},
+		{"Address": "04F3", "Before": ["3E"], "After": "C9"}
+	],
+	"PatchFile":
+	[
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_BASIC_LISP_SD/APP_TS-1000_TS-2000_SD.bin",
+			"File": "APP_BASIC_LISP_SD\\APP_TS-1000_TS-2000_SD.bin",
+			"Address": "F080"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "F5EF"
+	}
+}

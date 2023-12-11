@@ -1,0 +1,15 @@
+{
+	"Title": "SOS SWORD",
+	"Original": "SOS SWORD",
+	"Create": "SOS SWORD",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "0C6B", "Before": ["FF"], "After": "EF"}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "ALL"
+	}
+}

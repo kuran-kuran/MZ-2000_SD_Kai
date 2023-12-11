@@ -1,0 +1,21 @@
+{
+	"Title": "MZ-2000 BASIC MZ-1Z001",
+	"Original": "MZ-1Z001",
+	"Create": "MZ-1Z001MINSDPATCH",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+	],
+	"PatchFile":
+	[
+		{
+			"File": "APP_BASIC_LISP_SD\\APP_BASIC_LISP_SD_MZ-1Z001.bin",
+			"Address": "5580"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "5B10"
+	}
+}

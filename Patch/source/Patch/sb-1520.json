@@ -1,0 +1,30 @@
+{
+	"Title": "MZ-80B BASIC SB-5520 to MONITOR SB-1520",
+	"Original": "SB-5520",
+	"Create": "SB-1520",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "0080", "Before": ["C3,3B,00"], "After": "00,18,38"},
+		{"Address": "012E", "Before": ["01,76,49", "C3,76,49"], "After": "C3,A0,12"},
+		{"Address": "0176", "Before": ["56,17,02"], "After": "46,00,F8"},
+		{"Address": "02D2", "Before": ["16,01,21"], "After": "C3,03,F8"},
+		{"Address": "0303", "Before": ["16,02,ED"], "After": "C3,06,F8"},
+		{"Address": "030F", "Before": ["16,04,21"], "After": "C3,09,F8"},
+		{"Address": "0333", "Before": ["16,08,ED"], "After": "C3,0C,F8"},
+		{"Address": "033F", "Before": ["16,08,ED"], "After": "C3,0F,F8"}
+	],
+	"PatchFile":
+	[
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/EXT-ROM/EXT-ROM_SD MZ-80B.bin",
+			"File": "EXT-ROM\\EXT-ROM_SD MZ-80B.bin",
+			"Address": "12A0"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0080",
+		"Size": "8000"
+	}
+}
