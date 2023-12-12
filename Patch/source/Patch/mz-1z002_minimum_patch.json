@@ -1,0 +1,21 @@
+{
+	"Title": "MZ-2000 COLOR BASIC MZ-1Z002",
+	"Original": "MZ-1Z002",
+	"Create": "MZ-1Z002MINSDPATCH",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+	],
+	"PatchFile":
+	[
+		{
+			"File": "BasicMinSDPatch\MZ-1Z002MINSDPATCH.bin",
+			"Address": "5D22"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "5DB6"
+	}
+}

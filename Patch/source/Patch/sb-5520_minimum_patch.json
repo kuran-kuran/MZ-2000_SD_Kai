@@ -1,0 +1,21 @@
+{
+	"Title": "MZ-80B BASIC SB-5520",
+	"Original": "SB-5520",
+	"Create": "SB-5520MINSDPATCH",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+	],
+	"PatchFile":
+	[
+		{
+			"File": "BasicMinSDPatch\SB-5520MINSDPATCH.bin",
+			"Address": "49EE"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "4A82"
+	}
+}
