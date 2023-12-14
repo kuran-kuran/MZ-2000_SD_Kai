@@ -53,7 +53,7 @@ SD_LOAD1:
 ; HL: SDファイル名
 ; Result Cf: 0:正常, 1:エラー
 SD_OPEN_CONCAT:
-	LD	A, 0E0h       ;連結ファイルオープンコマンドE4h
+	LD	A, 0E0h      ;連結ファイルオープンコマンドE0h
 	CALL	SNDBYTE
 	CALL	RCVBYTE      ;状態取得(00H=OK)
 	OR	A
@@ -68,7 +68,7 @@ SD_OPEN_CONCAT1:
 
 ;**** 連結ファイル1ブロック読み込み ****
 SD_READ_CONCAT_1BLOCK:
-	LD	A, 0E1h       ;連結ファイル1ブロック読み込みコマンドE5h
+	LD	A, 0E1h      ;連結ファイル1ブロック読み込みコマンドE1h
 	CALL	SNDBYTE
 	CALL	RCVBYTE      ;状態取得(00H=OK)
 	OR	A
@@ -76,7 +76,7 @@ SD_READ_CONCAT_1BLOCK:
 	CALL	HDRCV        ;ヘッダ情報受信
 	CALL	DBRCV        ;データ受信
 	CALL	RCVBYTE
-	LD	(STATUS), A  ;ステータス: FEh:次のデータがある, 00h次のデータが無い(終了)
+	LD	(STATUS), A  ;ステータス: FEh:次のデータがある, 00h: 次のデータが無い(終了)
 	RET
 SD_READ_CONCAT_1BLOCK1:
 	XOR	A
@@ -84,13 +84,89 @@ SD_READ_CONCAT_1BLOCK1:
 	SCF
 	RET
 
-;**** 連結ファイルクローズ ****
-SD_CLOSE_CONCAT:
-	LD	A, 0E5h       ;連結ファイルクローズE5h
+;**** 連結ファイル1ブロックスキップ ****
+SD_SKIP_CONCAT_1BLOCK:
+	LD	A, 0E2h      ;連結ファイル1ブロックスキップコマンドE2h
 	CALL	SNDBYTE
 	CALL	RCVBYTE      ;状態取得(00H=OK)
 	OR	A
-	JR	NZ, SD_READ_CONCAT_1BLOCK1
+	JR	NZ, SD_SKIP_CONCAT_1BLOCK1
+	CALL	RCVBYTE
+	LD	(STATUS), A  ;ステータス: FEh:次のデータがある, 00h: 次のデータが無い(終了)
+	RET
+SD_SKIP_CONCAT_1BLOCK1:
+	XOR	A
+	LD	(STATUS), A
+	SCF
+	RET
+
+;**** 連結ファイル検索 ****
+SD_FIND_CONCAT_1BLOCK:
+	LD	A, 0E3h      ;連結ファイルオープンコマンドE3h
+	CALL	SNDBYTE
+	CALL	RCVBYTE      ;状態取得(00H=OK)
+	OR	A
+	JR	NZ, SD_FIND_CONCAT_1BLOCK1
+	CALL	SENDMZFILENAME ;MZファイル名送信
+	CALL	RCVBYTE
+	LD	(STATUS), A  ;ステータス: 00h: 見つかった, F1h:見つからなかった
+	RET
+SD_FIND_CONCAT_1BLOCK1:
+	LD	A, 0FFh
+	LD	(STATUS), A
+	SCF
+	RET
+
+;**** 連結ファイル先頭へシーク ****
+SD_TOP_CONCAT:
+	LD	A, 0E4h      ;連結ファイル先頭へシークコマンドE4h
+	CALL	SNDBYTE
+	CALL	RCVBYTE      ;状態取得(00h:OK)
+	OR	A
+	JR	NZ, SD_TOP_CONCAT1
+	CALL	RCVBYTE      ;状態取得(00h:OK, 0FFh:エラー)
+	OR	A
+	JR	NZ, SD_CLOSE_CONCAT1
+	RET
+SD_TOP_CONCAT1:
+	SCF
+	RET
+
+;**** 連結ファイルクローズ ****
+SD_CLOSE_CONCAT:
+	LD	A, 0E5h      ;連結ファイルクローズE5h
+	CALL	SNDBYTE
+	CALL	RCVBYTE      ;状態取得(00h:OK)
+	OR	A
+	JR	NZ, SD_CLOSE_CONCAT1
+	CALL	RCVBYTE      ;状態取得(00h:OK, 0FFh:エラー)
+	OR	A
+	JR	NZ, SD_CLOSE_CONCAT1
+	RET
+SD_CLOSE_CONCAT1:
+	SCF
+	RET
+
+;MZファイル名送信
+; HL: MZファイル名 (17bytes)
+SENDMZFILENAME:
+	LD	B, 17
+SENDMZFILENAME1:
+	LD	A, (HL)
+	INC	HL
+	OR	A
+	JR	Z, SENDFILENAME2
+	CALL	SNDBYTE
+	DEC	B
+	JR	NZ, SENDMZFILENAME1
+	JR	SENDMZFILENAME3
+SENDMZFILENAME2:
+	XOR	A
+	CALL	SNDBYTE
+	DEC	B
+	JR	NZ, SENDMZFILENAME2
+SENDMZFILENAME3:
+	CALL	RCVBYTE      ;状態取得(00H=OK)
 	RET
 
 ;ファイル名送信
