@@ -194,21 +194,28 @@ int main(int argc, char* argv[])
 //				std::cout << patchFileJson[i] << std::endl;
 				Json patchFileData(patchFileJson[i]);
 				// ダウンロード
-				std::string dwnld_URL = "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_BASIC_LISP_SD/APP_BASIC_LISP_SD_MZ-1Z001.bin";
-				URLDownloadToFileA(NULL, dwnld_URL.c_str(), patchFileData["File"].c_str(), 0, NULL);
-				std::cout << patchFileData["File"] << "をダウンロードしました。" << std::endl;
-				// ファイルパッチ
-				FileData patchFile;
-				bool result = patchFile.Load(patchFileData["File"]);
-				if(result == false)
+				std::string url = patchFileData["Url"];
+				std::string file = patchFileData["File"];
+				if ((url != "") && (file != ""))
 				{
-					throw Format("Abort: %sがみつかりません。", patchFileData["File"].c_str());
+					URLDownloadToFileA(NULL, url.c_str(), file.c_str(), 0, NULL);
+					std::cout << patchFileData["File"] << "をダウンロードしました。" << std::endl;
 				}
-				size_t address = strtol(patchFileData["Address"].c_str(), NULL, 16);
-				size_t fileSize = patchFile.GetBufferSize();
-				size_t bufferSize = address + fileSize;
-				mztBuffer.resize(bufferSize, 0);
-				memcpy(&mztBuffer[address], patchFile.GetBuffer(), fileSize);
+				// ファイルパッチ
+				if (patchFileData["File"] != "")
+				{
+					FileData patchFile;
+					bool result = patchFile.Load(patchFileData["File"]);
+					if (result == false)
+					{
+						throw Format("Abort: %sがみつかりません。", patchFileData["File"].c_str());
+					}
+					size_t address = strtol(patchFileData["Address"].c_str(), NULL, 16);
+					size_t fileSize = patchFile.GetBufferSize();
+					size_t bufferSize = address + fileSize;
+					mztBuffer.resize(bufferSize, 0);
+					memcpy(&mztBuffer[address], patchFile.GetBuffer(), fileSize);
+				}
 			}
 		}
 		// Save
