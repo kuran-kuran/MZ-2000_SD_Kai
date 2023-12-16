@@ -1,0 +1,41 @@
+{
+	"Title": "MZ-2000 BASIC MZ-1Z002",
+	"Original": "MZ-1Z002",
+	"Create": "MZ-1Z002",
+	"Support": "mz2000_sd",
+	"Patch":
+	[
+		{"Address": "02D2", "Before": ["16,01,21"], "After": "C3,00,66"},
+		{"Address": "0303", "Before": ["16,02,ED"], "After": "C3,03,66"},
+		{"Address": "030F", "Before": ["16,04,21"], "After": "C3,06,66"},
+		{"Address": "0333", "Before": ["16,08,ED"], "After": "C3,09,66"},
+		{"Address": "033F", "Before": ["16,08,ED"], "After": "C3,0C,66"},
+		{"Address": "1329", "Before": ["FF,5D"], "After": "9F,6B"},
+		{"Address": "1A46", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1AE9", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1C59", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1C73", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1CA2", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1CAA", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "1E6D", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "20A7", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "3D78", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "3E67", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "3E8D", "Before": ["5E,65"], "After": "A2,6B"},
+		{"Address": "3F6C", "Before": ["5C,65"], "After": "A0,6B"},
+		{"Address": "3F72", "Before": ["5C,65"], "After": "A0,6B"}
+	],
+	"PatchFile":
+	[
+		{
+			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/APP_BASIC_LISP_SD/APP_BASIC_LISP_SD_MZ-1Z002.bin",
+			"File": "APP_BASIC_LISP_SD\\APP_BASIC_LISP_SD_MZ-1Z002.bin",
+			"Address": "6680"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "6C11"
+	}
+}
