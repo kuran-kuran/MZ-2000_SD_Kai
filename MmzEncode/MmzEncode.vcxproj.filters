@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="library">
+      <UniqueIdentifier>{aad6686e-5261-4918-a66f-d50a21b5d35c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="library\lpng">
+      <UniqueIdentifier>{2557f3bc-5202-431d-a88a-a18a7dc64e71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="library\zlib">
+      <UniqueIdentifier>{45cd51fa-e01d-4bed-a990-404929671019}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="library\lpng\include">
+      <UniqueIdentifier>{18db52a2-cb6b-479e-91ea-282ede3069bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="library\zlib\include">
+      <UniqueIdentifier>{3282de23-c75e-4c09-9c5e-a7e026437d2a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\FileData.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Format.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Json.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MmzEncode.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Png.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\MzImage.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\FileData.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Format.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Json.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Png.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="library\lpng\include\png.h">
+      <Filter>library\lpng\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\lpng\include\pngconf.h">
+      <Filter>library\lpng\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\lpng\include\pnginfo.h">
+      <Filter>library\lpng\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\lpng\include\pnglibconf.h">
+      <Filter>library\lpng\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\lpng\include\pngstruct.h">
+      <Filter>library\lpng\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\zlib\include\zconf.h">
+      <Filter>library\zlib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="library\zlib\include\zlib.h">
+      <Filter>library\zlib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="source\MzImage.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -8,3 +8,13 @@ Patch/source/Patch/Patch.vcxproj.user
 Patch/source/PatchGUI/.vs
 Patch/source/PatchGUI/bin
 Patch/source/PatchGUI/obj
+DitheringCol8/.vs
+DitheringCol8/x64
+MmzEncode/.vs
+DitheringCol8/Debug
+MmzEncode/Debug
+MmzEncode/x64
+MmzEncode/MmzEncode.vcxproj.user
+DitheringCol8/DitheringCol8.vcxproj.user
+DitheringCol8/Release
+MmzEncode/Release

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="source">
+      <UniqueIdentifier>{fbbc76c7-67ae-45f1-87f3-3d16c89fe158}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="library">
+      <UniqueIdentifier>{c33f968e-2088-4fba-b799-bfe29b9815f7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\DitheringCol8.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\FileData.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Format.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Json.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Png.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Dithering.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="source\FileData.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Format.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Json.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Png.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="source\Dithering.hpp">
+      <Filter>source</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
