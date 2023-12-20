@@ -12,13 +12,14 @@ public:
 		WIDTH = 40,
 		HEIGHT = 25,
 		IMAGE_WIDTH = 640,
-		IMAGE_HEIGHT = 200
+		IMAGE_HEIGHT = 200,
+		ENCODE_BUFFER_MAX = 8192
 	};
 	MzImage(void);
 	~MzImage(void);
 	void SetBeforeImage(Png* beforePng);
 	void SetImage(Png* png);
-	std::vector<unsigned char> GetEncodeData(void);
+	std::vector<std::vector<unsigned char>> GetEncodeData(void);
 private:
 	std::vector<unsigned char> GetMzImage16x8(int x, int y, int plane) const;
 	int GetSamePlaneFlag(int x, int y) const;
@@ -28,7 +29,7 @@ private:
 	MzImage& operator = (MzImage&);
 	Png* beforePng;
 	Png* png;
-	int samePlaneFlag[HEIGHT][WIDTH];
+	unsigned int samePlaneFlag[HEIGHT][WIDTH];
 	unsigned int maskTable[4];
 };
 

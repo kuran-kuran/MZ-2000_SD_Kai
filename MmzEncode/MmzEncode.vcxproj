@@ -22,6 +22,7 @@
     <ClCompile Include="source\FileData.cpp" />
     <ClCompile Include="source\Format.cpp" />
     <ClCompile Include="source\Json.cpp" />
+    <ClCompile Include="source\lze.c" />
     <ClCompile Include="source\MmzEncode.cpp" />
     <ClCompile Include="source\MzImage.cpp" />
     <ClCompile Include="source\Png.cpp" />

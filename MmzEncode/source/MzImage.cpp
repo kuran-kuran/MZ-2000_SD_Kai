@@ -30,94 +30,90 @@ void MzImage::SetImage(Png* png)
 	}
 }
 
-// コマンド
-// 00        : 1個スキップ
-void MzImage::Command00(void)
+std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 {
-}
-
-// 01-07, xx : プレーン, 個数
-void MzImage::Command01_07(int planeFlag, std::vector<unsigned char>& encodeBuffer)
-{
-	encodeBuffer.push_back(planeFlag);
-}
-
-// 0Ah       : 中断
-void MzImage::CommandA0(void)
-{
-}
-
-// 0Bh       : 終了
-void MzImage::CommandB0(void)
-{
-}
-
-// C000-FFFF : GVRAM Position
-void MzImage::CommandC0(std::vector<unsigned char>& encodeBuffer)
-{
-	unsigned short vramAddress = 0xC000 + (y * 640 + x * 2);
-	std::copy(reinterpret_cast<unsigned char*>(&vramAddress), reinterpret_cast<unsigned char*>(&vramAddress) + sizeof(vramAddress), std::back_inserter(encodeBuffer));
-}
-
-std::vector<unsigned char> MzImage::GetEncodeData(void)
-{
+	std::vector<std::vector<unsigned char>> encodeBufferList;
 	std::vector<unsigned char> encodeBuffer;
 	std::vector<unsigned char> tempImageBuffer;
 	for (int y = 0; y < HEIGHT; ++ y)
 	{
 		// 0: 最初の画像検索、見つかったらアドレス保存
 		int phase = 0;
+		int setPhase = phase;
 		int beforePlaneFlag = 0;
 		bool imageLatch = false;
 		int imageCount = 0;
+		unsigned short vramAddress = 0;
 		for (int x = 0; x < WIDTH; ++ x)
 		{
-			int planeFlag = this->samePlaneFlag[y][x];
-			if(planeFlag == 0)
+			unsigned int planeFlag = this->samePlaneFlag[y][x];
+			if (phase == 0)
 			{
-				continue;
-			}
-			switch(phase)
-			{
-			case 0:
+				if (planeFlag != 0)
 				{
-					if(planeFlag == 0)
-					{
-						break;
-					}
+					// 登録サイズ
+					size_t addSize = 2;
 					// 描画アドレス
-					CommandC0(encodeBuffer);
-					// プレーン
-					Command01_07(planeFlag, encodeBuffer);
-					imageCount = 0;
-					phase = 1;
-					break;
-				}
-			case 1:
-				// 個数取得
-				{
-					if(planeFlag == beforePlaneFlag)
-					{
-						++ imageCount;
-						break;
-					}
-					// 変った
+					vramAddress = 0xC000 + (y * 640 + x * 2);
+					setPhase = 1;
 				}
 			}
-			if(planeFlag != 0)
+			if (planeFlag != 0)
 			{
+				// 画像取得
 				int x16 = x * 16;
 				int y8 = y * 8;
-				for(int i = 1; i <= 3; ++ i)
+				unsigned int mask = 1;
+				for (int i = 1; i <= 3; ++i)
 				{
-					std::vector<unsigned char> image16x8 = GetMzImage16x8(x16, y8, planeFlag);
-					std::copy(image16x8.begin(), image16x8.end(), std::back_inserter(tempImageBuffer));
+					if (planeFlag & mask)
+					{
+						std::vector<unsigned char> image16x8 = GetMzImage16x8(x16, y8, i);
+						std::copy(image16x8.begin(), image16x8.end(), std::back_inserter(tempImageBuffer));
+					}
+					mask <<= 1;
+				}
+				++ imageCount;
+			}
+			if (phase == 1)
+			{
+				// 個数取得
+				// 同じplaneFlagが続いている、xが右端に来ていない
+				if((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
+				{
+					// planeFlag変った、またはxが右端に来た
+					// 登録サイズ
+					size_t addSize = 2 + 1 + 1 + tempImageBuffer.size();
+					// 登録サイズ
+					if (encodeBuffer.size() + addSize >= ENCODE_BUFFER_MAX - 1)
+					{
+						encodeBuffer.push_back(0x0A);
+						encodeBufferList.push_back(encodeBuffer);
+						encodeBuffer.clear();
+					}
+					// コマンドC0h 描画アドレス登録
+					unsigned char vramAddressHigh = vramAddress >> 8;
+					unsigned char vramAddressLow = vramAddress & 0xFF;
+					encodeBuffer.push_back(static_cast<unsigned char>(vramAddressHigh));
+					encodeBuffer.push_back(static_cast<unsigned char>(vramAddressLow));
+					// コマンド01h～07h 描画プレーン登録
+					encodeBuffer.push_back(static_cast<unsigned char>(planeFlag));
+					// 個数登録
+					encodeBuffer.push_back(static_cast<unsigned char>(imageCount));
+					// 画像登録
+					std::copy(tempImageBuffer.begin(), tempImageBuffer.end(), std::back_inserter(encodeBuffer));
+					imageCount = 0;
+					tempImageBuffer.clear();
+					setPhase = 0;
 				}
 			}
+			phase = setPhase;
 			beforePlaneFlag = planeFlag;
 		}
 	}
-	return encodeBuffer;
+	encodeBuffer.push_back(0x0B);
+	encodeBufferList.push_back(encodeBuffer);
+	return encodeBufferList;
 }
 
 std::vector<unsigned char> MzImage::GetMzImage16x8(int x, int y, int plane) const

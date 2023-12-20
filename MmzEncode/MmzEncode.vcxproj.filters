@@ -40,6 +40,9 @@
     <ClCompile Include="source\MzImage.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="source\lze.c">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\FileData.hpp">
