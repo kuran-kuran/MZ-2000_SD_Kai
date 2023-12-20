@@ -152,6 +152,8 @@ int main(int argc, char* argv[])
 			mzImage.SetBeforeImage(&beforePng);
 		}
 		mzImage.SetImage(&sourcePng);
+		std::vector<unsigned char> mmzImage = mzImage.GetEncodeData();
+		int a = 0;
 	}
 	catch (std::string message)
 	{

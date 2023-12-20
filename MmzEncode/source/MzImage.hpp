@@ -18,15 +18,18 @@ public:
 	~MzImage(void);
 	void SetBeforeImage(Png* beforePng);
 	void SetImage(Png* png);
-	std::vector<unsigned char> GetMzImage16x8(int plane) const;
+	std::vector<unsigned char> GetEncodeData(void);
 private:
-	int GetPlaneFlag(int x, int y);
-	bool IsSame(int x, int y, int plane);
+	std::vector<unsigned char> GetMzImage16x8(int x, int y, int plane) const;
+	int GetSamePlaneFlag(int x, int y) const;
+	int GetPlaneFlag(int x, int y) const;
+	bool IsSame(int x, int y, int plane) const;
 	MzImage(MzImage&);
 	MzImage& operator = (MzImage&);
 	Png* beforePng;
 	Png* png;
 	int samePlaneFlag[HEIGHT][WIDTH];
+	unsigned int maskTable[4];
 };
 
 #endif
