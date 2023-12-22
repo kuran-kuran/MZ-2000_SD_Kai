@@ -400,6 +400,7 @@ void	encode( unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out
 	unsigned long int	incount = 0, printcount = 0, cr;
 	size_t in_buffer_index = 0;
 
+	outcount = 0;
 	inBufferSize = in_buffer_size;
 	inBuffer = in_buffer;
 	inBufferIndex = 0;
@@ -471,7 +472,7 @@ void	encode( unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out
 			insert_node(r);
 		}
 		if ( (incount+=i) > printcount ) {
-			printf( "%12lu\r", incount );
+			// printf( "%12lu\r", incount );
 			printcount += 1024*16;
 		}
 		while ( i++ < mlen ) {
@@ -490,12 +491,13 @@ void	encode( unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out
 
   NoEncode:;
 	outcount += finish_putencode();
-	printf( "In : %lu bytes\n", incount );
-	printf( "Out: %lu bytes\n", outcount );
-	if ( incount != 0 ) {
-		cr = ( 1000 * outcount + (incount/2) ) / incount;
-		printf( " Out/In: %lu.%03lu\n", cr/1000, cr%1000 );
-	}
+//	printf( "In : %lu bytes\n", incount );
+//	printf( "Out: %lu bytes\n", outcount );
+//	if ( incount != 0 ) {
+//		cr = ( 1000 * outcount + (incount/2) ) / incount;
+//		printf( " Out/In: %lu.%03lu\n", cr/1000, cr%1000 );
+//	}
+	*out_buffer_size = outcount;
 }
 
 #if false

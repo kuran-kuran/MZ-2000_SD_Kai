@@ -5,11 +5,17 @@
 #include "Png.hpp"
 #include "MzImage.hpp"
 
+extern "C"
+{
+	void encode(unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out_buffer, size_t* out_buffer_size);
+};
+
 static const char* const NAME = "MZ画像エンコードプログラム";
 static const char* const VERSION = "1.0.0";
 static const char* const FILENAME = "MmzEccode";
 static const unsigned int OPTION_HELP = 0x00000001;
-static const unsigned int OPTION_80B = 0x00000002;
+static const unsigned int OPTION_80B  = 0x00000002;
+static const unsigned int OPTION_ADD  = 0x00000004;
 
 int main(int argc, char* argv[])
 {
@@ -43,6 +49,10 @@ int main(int argc, char* argv[])
 						{
 							option |= OPTION_80B;
 							width = 320;
+						}
+						else if (_strnicmp(&argv[i][1], "ADD", 3) == 0)
+						{
+							option |= OPTION_ADD;
 						}
 					}
 					else
@@ -91,8 +101,8 @@ int main(int argc, char* argv[])
 		if (path3.empty() == true)
 		{
 			// ファイル名が2つしか指定されていない場合はpath2にpath1、path3にpath2をいれる
-			path2 = path1;
 			path3 = path2;
+			path2 = path1;
 			path1.clear();
 		}
 		bool isBeforeValid = !path1.empty();
@@ -146,6 +156,10 @@ int main(int argc, char* argv[])
 			std::cout << "Cannot load png2." << std::endl;
 			return -1;
 		}
+		if (!(option & OPTION_ADD))
+		{
+			_unlink(path3.c_str());
+		}
 		MzImage mzImage;
 		if (isBeforeValid == true)
 		{
@@ -153,7 +167,62 @@ int main(int argc, char* argv[])
 		}
 		mzImage.SetImage(&sourcePng);
 		std::vector<std::vector<unsigned char>> mmzImageList = mzImage.GetEncodeData();
-		int a = 0;
+		if(mmzImageList.size() == 1)
+		{
+			if(mmzImageList[0].size() == 1)
+			{
+				// 違いが無いので追加しない
+				std::cout << "AddFile: " << path2 << ", AddSize: " << 0 << " byte" << std::endl;
+				return 0;
+			}
+		}
+		unsigned char signature = 'A';
+		size_t addSize = 0;
+		for(std::vector<unsigned char> mmzImage: mmzImageList)
+		{
+			size_t lzeBufferSize = 8192;
+			std::vector<unsigned char> lzeBuffer(lzeBufferSize, 0);
+			encode(&mmzImage[0], mmzImage.size(), &lzeBuffer[0], &lzeBufferSize);
+			std::vector<unsigned char> MztHeader(128, 0);
+			MztHeader[0x0000] = 1; // Binary
+			for(int i = 0; i < 17; ++ i)
+			{
+				MztHeader[0x0001 + i] = 0x0D;
+			}
+			for(int i = 0; i < 16; ++ i)
+			{
+				if(path2[i] == 0)
+				{
+					MztHeader[0x0001 + i] = signature;
+					break;
+				}
+				if(path2[i] == '.')
+				{
+					MztHeader[0x0001 + i] = signature;
+					break;
+				}
+				MztHeader[0x0001 + i] = path2[i];
+			}
+			// Size
+			MztHeader[0x0012] = static_cast<unsigned char>(lzeBufferSize & 255);
+			MztHeader[0x0013] = static_cast<unsigned char>(lzeBufferSize / 256);
+			// LoadAddress
+			MztHeader[0x0014] = 0x00;
+			MztHeader[0x0015] = 0xC0;
+			// ExecuteAddress
+			MztHeader[0x0016] = 0xB1;
+			MztHeader[0x0017] = 0;
+			// Save
+			FileData mztFile;
+			mztFile.SetBuffer(&MztHeader[0], 128);
+			mztFile.SaveAdd(path3);
+			addSize += 128;
+			mztFile.SetBuffer(&lzeBuffer[0], lzeBufferSize);
+			mztFile.SaveAdd(path3);
+			addSize += lzeBufferSize;
+			++ signature;
+		}
+		std::cout << "AddFile: " << path2 << ", AddSize: " << addSize << " bytes" << std::endl;
 	}
 	catch (std::string message)
 	{
