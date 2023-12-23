@@ -44,22 +44,23 @@ size_t outBufferIndex;
 /********************************************************************************/
 int	getBuffer(void)
 {
-	++ inBufferIndex;
 	if (inBufferIndex >= inBufferSize)
 	{
 		return -1;
 	}
-	return (int)inBuffer[inBufferIndex];
+	int result = (int)inBuffer[inBufferIndex];
+	++inBufferIndex;
+	return result;
 }
 
 void	putBuffer(int c)
 {
-	++ outBufferIndex;
 	if (outBufferIndex >= *outBufferSize)
 	{
 		return;
 	}
 	outBuffer[outBufferIndex] = (unsigned char)c;
+	++outBufferIndex;
 }
 
 void	error( char *mes )

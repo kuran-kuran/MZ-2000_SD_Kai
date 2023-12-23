@@ -1,9 +1,12 @@
 ﻿#include <iostream>
+#include <shlwapi.h>
 #include "FileData.hpp"
 #include "Format.hpp"
 #include "Json.hpp"
 #include "Png.hpp"
 #include "MzImage.hpp"
+
+#pragma comment(lib, "Shlwapi.lib")
 
 extern "C"
 {
@@ -182,13 +185,32 @@ int main(int argc, char* argv[])
 		{
 			size_t lzeBufferSize = 8192;
 			std::vector<unsigned char> lzeBuffer(lzeBufferSize, 0);
+			// Debug
+#if false
+			if (addSize == 0)
+			{
+				FileData file;
+				file.SetBuffer(&mmzImage[0], mmzImage.size());
+				file.Save(path3 + ".bin");
+			}
+#endif
 			encode(&mmzImage[0], mmzImage.size(), &lzeBuffer[0], &lzeBufferSize);
+			// Debug
+#if false
+			if (addSize == 0)
+			{
+				FileData file;
+				file.SetBuffer(&lzeBuffer[0], lzeBufferSize);
+				file.Save(path3 + ".lze");
+			}
+#endif
 			std::vector<unsigned char> MztHeader(128, 0);
 			MztHeader[0x0000] = 1; // Binary
 			for(int i = 0; i < 17; ++ i)
 			{
 				MztHeader[0x0001 + i] = 0x0D;
 			}
+			std::string filename = PathFindFileNameA(path2.c_str());
 			for(int i = 0; i < 16; ++ i)
 			{
 				if(path2[i] == 0)

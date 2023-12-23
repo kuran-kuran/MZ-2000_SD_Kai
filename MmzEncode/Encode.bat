@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 set "exe_path=Release\MmzEncode.exe"
 set "folder_path=%1\"
-set "mztname=EncodeImage.mzt"
+set "mztname=IMAGE.mzt"
 
 %exe_path% %folder_path%0001.png %mztname%
 
