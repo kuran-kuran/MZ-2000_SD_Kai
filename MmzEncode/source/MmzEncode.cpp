@@ -213,17 +213,17 @@ int main(int argc, char* argv[])
 			std::string filename = PathFindFileNameA(path2.c_str());
 			for(int i = 0; i < 16; ++ i)
 			{
-				if(path2[i] == 0)
+				if(filename[i] == 0)
 				{
 					MztHeader[0x0001 + i] = signature;
 					break;
 				}
-				if(path2[i] == '.')
+				if(filename[i] == '.')
 				{
 					MztHeader[0x0001 + i] = signature;
 					break;
 				}
-				MztHeader[0x0001 + i] = path2[i];
+				MztHeader[0x0001 + i] = filename[i];
 			}
 			// Size
 			MztHeader[0x0012] = static_cast<unsigned char>(lzeBufferSize & 255);

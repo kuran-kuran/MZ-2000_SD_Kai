@@ -47,20 +47,50 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 		for (int x = 0; x < WIDTH; ++ x)
 		{
 			unsigned int planeFlag = this->samePlaneFlag[y][x];
-			if (phase == 0)
+			if (planeFlag == 6)
 			{
-				if (planeFlag != 0)
+				int a = 0;
+			}
+			// planeFlag‚ª•Ï‚í‚Á‚½Ax‚ª‰E’[‚É—ˆ‚½
+			if ((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
+			{
+				if (beforePlaneFlag != 0)
 				{
-					// “o˜^ƒTƒCƒY
-					size_t addSize = 2;
-					// •`‰æƒAƒhƒŒƒX
+					if (vramAddress != 0)
+					{
+						// “o˜^‚·‚é
+						// “o˜^ƒTƒCƒY”»’è
+						size_t addSize = 2 + 1 + 1 + tempImageBuffer.size();
+						if (encodeBuffer.size() + addSize >= ENCODE_BUFFER_MAX - 1)
+						{
+							encodeBuffer.push_back(0x0A);
+							encodeBufferList.push_back(encodeBuffer);
+							encodeBuffer.clear();
+						}
+						// ƒRƒ}ƒ“ƒhC0h •`‰æƒAƒhƒŒƒX“o˜^
+						unsigned char vramAddressHigh = vramAddress >> 8;
+						unsigned char vramAddressLow = vramAddress & 0xFF;
+						encodeBuffer.push_back(static_cast<unsigned char>(vramAddressHigh));
+						encodeBuffer.push_back(static_cast<unsigned char>(vramAddressLow));
+						// ƒRƒ}ƒ“ƒh01h`07h •`‰æƒvƒŒ[ƒ““o˜^
+						encodeBuffer.push_back(static_cast<unsigned char>(beforePlaneFlag));
+						// ŒÂ”“o˜^
+						encodeBuffer.push_back(static_cast<unsigned char>(imageCount));
+						// ‰æ‘œ“o˜^
+						std::copy(tempImageBuffer.begin(), tempImageBuffer.end(), std::back_inserter(encodeBuffer));
+						imageCount = 0;
+						tempImageBuffer.clear();
+						vramAddress = 0xC000 + (y * 640 + x * 2);
+					}
+				}
+				else
+				{
 					vramAddress = 0xC000 + (y * 640 + x * 2);
-					setPhase = 1;
 				}
 			}
+			// ‰æ‘œæ“¾
 			if (planeFlag != 0)
 			{
-				// ‰æ‘œæ“¾
 				int x16 = x * 16;
 				int y8 = y * 8;
 				unsigned int mask = 1;
@@ -73,41 +103,8 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 					}
 					mask <<= 1;
 				}
-				++ imageCount;
+				++imageCount;
 			}
-			if (phase == 1)
-			{
-				// ŒÂ”æ“¾
-				// “¯‚¶planeFlag‚ª‘±‚¢‚Ä‚¢‚éAx‚ª‰E’[‚É—ˆ‚Ä‚¢‚È‚¢
-				if((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
-				{
-					// planeFlag•Ï‚Á‚½A‚Ü‚½‚Íx‚ª‰E’[‚É—ˆ‚½
-					// “o˜^ƒTƒCƒY
-					size_t addSize = 2 + 1 + 1 + tempImageBuffer.size();
-					// “o˜^ƒTƒCƒY
-					if (encodeBuffer.size() + addSize >= ENCODE_BUFFER_MAX - 1)
-					{
-						encodeBuffer.push_back(0x0A);
-						encodeBufferList.push_back(encodeBuffer);
-						encodeBuffer.clear();
-					}
-					// ƒRƒ}ƒ“ƒhC0h •`‰æƒAƒhƒŒƒX“o˜^
-					unsigned char vramAddressHigh = vramAddress >> 8;
-					unsigned char vramAddressLow = vramAddress & 0xFF;
-					encodeBuffer.push_back(static_cast<unsigned char>(vramAddressHigh));
-					encodeBuffer.push_back(static_cast<unsigned char>(vramAddressLow));
-					// ƒRƒ}ƒ“ƒh01h`07h •`‰æƒvƒŒ[ƒ““o˜^
-					encodeBuffer.push_back(static_cast<unsigned char>(planeFlag));
-					// ŒÂ”“o˜^
-					encodeBuffer.push_back(static_cast<unsigned char>(imageCount));
-					// ‰æ‘œ“o˜^
-					std::copy(tempImageBuffer.begin(), tempImageBuffer.end(), std::back_inserter(encodeBuffer));
-					imageCount = 0;
-					tempImageBuffer.clear();
-					setPhase = 0;
-				}
-			}
-			phase = setPhase;
 			beforePlaneFlag = planeFlag;
 		}
 	}

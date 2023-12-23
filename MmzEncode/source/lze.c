@@ -498,7 +498,7 @@ void	encode( unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out
 //		cr = ( 1000 * outcount + (incount/2) ) / incount;
 //		printf( " Out/In: %lu.%03lu\n", cr/1000, cr%1000 );
 //	}
-	*out_buffer_size = outcount;
+	*out_buffer_size = outBufferIndex;
 }
 
 #if false
