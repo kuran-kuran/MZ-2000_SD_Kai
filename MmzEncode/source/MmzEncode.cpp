@@ -164,6 +164,10 @@ int main(int argc, char* argv[])
 			_unlink(path3.c_str());
 		}
 		MzImage mzImage;
+		if (option & OPTION_80B)
+		{
+			mzImage.SetMode(MzImage::MODE_80B);
+		}
 		if (isBeforeValid == true)
 		{
 			mzImage.SetBeforeImage(&beforePng);
@@ -187,21 +191,25 @@ int main(int argc, char* argv[])
 			std::vector<unsigned char> lzeBuffer(lzeBufferSize, 0);
 			// Debug
 #if false
-			if (addSize == 0)
 			{
 				FileData file;
 				file.SetBuffer(&mmzImage[0], mmzImage.size());
-				file.Save(path3 + ".bin");
+				std::string debugFilename = path3;
+				debugFilename.push_back(signature);
+				debugFilename += ".bin";
+				file.Save(debugFilename);
 			}
 #endif
 			encode(&mmzImage[0], mmzImage.size(), &lzeBuffer[0], &lzeBufferSize);
 			// Debug
 #if false
-			if (addSize == 0)
 			{
 				FileData file;
 				file.SetBuffer(&lzeBuffer[0], lzeBufferSize);
-				file.Save(path3 + ".lze");
+				std::string debugFilename = path3;
+				debugFilename.push_back(signature);
+				debugFilename += ".lze";
+				file.Save(debugFilename);
 			}
 #endif
 			std::vector<unsigned char> MztHeader(128, 0);
