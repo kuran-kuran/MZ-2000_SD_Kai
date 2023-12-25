@@ -25,6 +25,7 @@ public:
 	void SetImage(Png* png);
 	std::vector<std::vector<unsigned char>> GetEncodeData(void);
 private:
+	void GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int y, unsigned int planeFlag);
 	std::vector<unsigned char> GetMzImage16x8(int x, int y, int plane) const;
 	std::vector<unsigned char> GetMzImage8x8(int x, int y) const;
 	int GetSamePlaneFlag(int x, int y) const;

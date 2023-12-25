@@ -50,37 +50,22 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 		bool imageLatch = false;
 		int imageCount = 0;
 		unsigned short vramAddress = 0;
+		bool addFlag = false;
 		for (int x = 0; x < WIDTH; ++ x)
 		{
 			unsigned int planeFlag = this->samePlaneFlag[y][x];
-			// ‰æ‘œŽæ“¾
-			if (planeFlag != 0)
-			{
-				int x16 = x * 16;
-				int y8 = y * 8;
-				unsigned int mask = 1;
-				for (int i = 1; i <= 3; ++i)
-				{
-					if (planeFlag & mask)
-					{
-						std::vector<unsigned char> image;
-						if(mode == MODE_2000)
-						{
-							image = GetMzImage16x8(x16, y8, i);
-						}
-						else
-						{
-							image = GetMzImage16x8(x16, y8, i);
-						}
-						std::copy(image.begin(), image.end(), std::back_inserter(tempImageBuffer));
-					}
-					mask <<= 1;
-				}
-				++imageCount;
-			}
 			// planeFlag‚ª•Ï‚í‚Á‚½Ax‚ª‰E’[‚É—ˆ‚½
 			if ((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
 			{
+				if (x == (WIDTH - 1))
+				{
+					if (planeFlag != 0)
+					{
+						GetMzImage(tempImageBuffer, x, y, planeFlag);
+						++imageCount;
+						addFlag = true;
+					}
+				}
 				if (beforePlaneFlag != 0)
 				{
 					if (vramAddress != 0)
@@ -115,12 +100,42 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 					vramAddress = 0xC000 + (y * 640 + x * 2);
 				}
 			}
+			// ‰æ‘œŽæ“¾
+			if ((planeFlag != 0) && (addFlag == false))
+			{
+				GetMzImage(tempImageBuffer, x, y, planeFlag);
+				++imageCount;
+			}
 			beforePlaneFlag = planeFlag;
 		}
 	}
 	encodeBuffer.push_back(0x0B);
 	encodeBufferList.push_back(encodeBuffer);
 	return encodeBufferList;
+}
+
+void MzImage::GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int y, unsigned int planeFlag)
+{
+	int x16 = x * 16;
+	int y8 = y * 8;
+	unsigned int mask = 1;
+	for (int i = 1; i <= 3; ++i)
+	{
+		if (planeFlag & mask)
+		{
+			std::vector<unsigned char> image;
+			if (mode == MODE_2000)
+			{
+				image = GetMzImage16x8(x16, y8, i);
+			}
+			else
+			{
+				image = GetMzImage16x8(x16, y8, i);
+			}
+			std::copy(image.begin(), image.end(), std::back_inserter(tempImageBuffer));
+		}
+		mask <<= 1;
+	}
 }
 
 std::vector<unsigned char> MzImage::GetMzImage16x8(int x, int y, int plane) const

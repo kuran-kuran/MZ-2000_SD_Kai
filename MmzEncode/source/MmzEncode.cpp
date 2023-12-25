@@ -250,6 +250,18 @@ int main(int argc, char* argv[])
 			mztFile.SetBuffer(&lzeBuffer[0], lzeBufferSize);
 			mztFile.SaveAdd(path3);
 			addSize += lzeBufferSize;
+#if false
+			{
+				FileData file;
+				std::string debugFilename = path3;
+				debugFilename.push_back(signature);
+				debugFilename += ".mzt";
+				file.SetBuffer(&MztHeader[0], 128);
+				file.Save(debugFilename);
+				file.SetBuffer(&lzeBuffer[0], lzeBufferSize);
+				file.SaveAdd(debugFilename);
+			}
+#endif
 			++ signature;
 		}
 		std::cout << "AddFile: " << path2 << ", AddSize: " << addSize << " bytes" << std::endl;
