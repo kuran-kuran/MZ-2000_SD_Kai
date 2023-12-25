@@ -8,7 +8,10 @@
 static const char* const NAME = "ディザリング減色プログラム";
 static const char* const VERSION = "1.0.0";
 static const char* const FILENAME = "DitheringCol8";
-static const unsigned int OPTION_HELP = 0x00000001;
+static const unsigned int OPTION_RED = 0x00000001;
+static const unsigned int OPTION_BLUE  = 0x00000002;
+static const unsigned int OPTION_GREEN = 0x00000004;
+static const unsigned int OPTION_HELP  = 0x00000008;
 
 int main(int argc, char* argv[])
 {
@@ -36,6 +39,18 @@ int main(int argc, char* argv[])
 						{
 							option |= OPTION_HELP;
 						}
+						else if (_strnicmp(&argv[i][1], "RED", 3) == 0)
+						{
+							option |= OPTION_RED;
+						}
+						else if (_strnicmp(&argv[i][1], "GREEN", 5) == 0)
+						{
+							option |= OPTION_GREEN;
+						}
+						else if (_strnicmp(&argv[i][1], "BLUE", 4) == 0)
+						{
+							option |= OPTION_BLUE;
+						}
 					}
 					else
 					{
@@ -55,14 +70,21 @@ int main(int argc, char* argv[])
 				option |= OPTION_HELP;
 			}
 		}
+		if ((option & 0x07) == 0)
+		{
+			option = OPTION_BLUE | OPTION_RED | OPTION_GREEN;
+		}
 		// タイトル表示
 		std::cout << NAME << " version." << VERSION << "\n";
 		// オプション表示
 		if (option & OPTION_HELP)
 		{
-			std::cout << "Usage : " << NAME << " [option] [input json] [input mzt filename] [output mzt filename]" << std::endl;
+			std::cout << "Usage : " << NAME << " [option] [input png filename] [output png filename]" << std::endl;
 			std::cout << std::endl;
 			std::cout << "Option : /HELP            Display help message." << std::endl;
+			std::cout << "         /RED             Outout red color." << std::endl;
+			std::cout << "         /GREEN           Outout green color." << std::endl;
+			std::cout << "         /BLUE            Outout blue color." << std::endl;
 			std::cout << std::endl;
 			return -1;
 		}
@@ -87,6 +109,8 @@ int main(int argc, char* argv[])
 
 		// ディザリング実行
 		Dithering dithering;
+		unsigned int plane = option & 0x07;
+		dithering.SetPlane(plane);
 		dithering.SetPixelBuffer(pixelBuffer, width, height);
 		dithering.Dithering2x2();
 		std::vector<unsigned int> ditheringBuffer;

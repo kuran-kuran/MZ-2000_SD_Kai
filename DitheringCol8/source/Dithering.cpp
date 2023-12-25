@@ -6,11 +6,18 @@ Dithering::Dithering(void)
 :sourceBuffer()
 ,width(0)
 ,height(0)
+,plane(RED | GREEN | BLUE)
+,maskTable{ 0x00000000, 0x00FF0000, 0x000000FF, 0x0000FF00 }
 {
 }
 
 Dithering::~Dithering(void)
 {
+}
+
+void Dithering::SetPlane(unsigned int plane)
+{
+	this->plane = plane;
 }
 
 void Dithering::SetPixelBuffer(void* buffer, int width, int height)
@@ -111,9 +118,9 @@ void Dithering::Dithering2x2(void)
 			Color pixelColor[4] = {0, 0, 0, 0};
 			for (int i = 0; i < 4; ++ i)
 			{
-				pixelColor[i].pixel32.blue = dithering2x2Table[blueIndex][i];
-				pixelColor[i].pixel32.red = dithering2x2Table[redIndex][i];
-				pixelColor[i].pixel32.green = dithering2x2Table[greenIndex][i];
+				pixelColor[i].pixel32.blue = (this->plane & BLUE) ? dithering2x2Table[blueIndex][i] : 0;
+				pixelColor[i].pixel32.red = (this->plane & RED) ? dithering2x2Table[redIndex][i] : 0;
+				pixelColor[i].pixel32.green = (this->plane & GREEN) ? dithering2x2Table[greenIndex][i] : 0;
 				pixelColor[i].pixel32.alpha = 255;
 			}
 			ditheringBuffer[y * width + x] = pixelColor[0].pixelData;
