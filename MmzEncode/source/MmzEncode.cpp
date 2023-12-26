@@ -238,7 +238,14 @@ int main(int argc, char* argv[])
 			MztHeader[0x0013] = static_cast<unsigned char>(lzeBufferSize / 256);
 			// LoadAddress
 			MztHeader[0x0014] = 0x00;
-			MztHeader[0x0015] = 0xC0;
+			if (option & OPTION_80B)
+			{
+				MztHeader[0x0015] = 0xDF;
+			}
+			else
+			{
+				MztHeader[0x0015] = 0xC0;
+			}
 			// ExecuteAddress
 			MztHeader[0x0016] = 0xB1;
 			MztHeader[0x0017] = 0;

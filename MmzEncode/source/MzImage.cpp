@@ -8,6 +8,9 @@ MzImage::MzImage(void)
 ,samePlaneFlag()
 ,maskTable{0x00000000, 0x00FF0000, 0x000000FF, 0x0000FF00}
 {
+	this->vramBase = this->mode == MODE_2000 ? 0xC000 : 0x6000;
+	this->width = this->mode == MODE_2000 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
+	this->tileWidth = this->mode == MODE_2000 ? 16 : 8;
 }
 
 MzImage::~MzImage(void)
@@ -26,7 +29,7 @@ void MzImage::SetImage(Png* png)
 	{
 		for (int x = 0; x < WIDTH; ++ x)
 		{
-			this->samePlaneFlag[y][x] = GetPlaneFlag(x * 16, y * 8);
+			this->samePlaneFlag[y][x] = GetPlaneFlag(x * this->tileWidth, y * 8);
 		}
 	}
 }
@@ -34,6 +37,9 @@ void MzImage::SetImage(Png* png)
 void MzImage::SetMode(int mode)
 {
 	this->mode = mode;
+	this->vramBase = this->mode == MODE_2000 ? 0xC000 : 0x6000;
+	this->width = this->mode == MODE_2000 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
+	this->tileWidth = this->mode == MODE_2000 ? 16 : 8;
 }
 
 std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
@@ -92,12 +98,12 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 						std::copy(tempImageBuffer.begin(), tempImageBuffer.end(), std::back_inserter(encodeBuffer));
 						imageCount = 0;
 						tempImageBuffer.clear();
-						vramAddress = 0xC000 + (y * 640 + x * 2);
+						vramAddress = this->vramBase + (y * this->width + x * 2);
 					}
 				}
 				else
 				{
-					vramAddress = 0xC000 + (y * 640 + x * 2);
+					vramAddress = this->vramBase + (y * this->width + x * 2);
 				}
 			}
 			// ‰æ‘œŽæ“¾
@@ -116,7 +122,7 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 
 void MzImage::GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int y, unsigned int planeFlag)
 {
-	int x16 = x * 16;
+	int xx = x * this->tileWidth;
 	int y8 = y * 8;
 	unsigned int mask = 1;
 	for (int i = 1; i <= 3; ++i)
@@ -124,67 +130,44 @@ void MzImage::GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int
 		if (planeFlag & mask)
 		{
 			std::vector<unsigned char> image;
-			if (mode == MODE_2000)
-			{
-				image = GetMzImage16x8(x16, y8, i);
-			}
-			else
-			{
-				image = GetMzImage16x8(x16, y8, i);
-			}
+			image = GetMzTileImage(xx, y8, i);
 			std::copy(image.begin(), image.end(), std::back_inserter(tempImageBuffer));
 		}
 		mask <<= 1;
 	}
 }
 
-std::vector<unsigned char> MzImage::GetMzImage16x8(int x, int y, int plane) const
+std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) const
 {
 	std::vector<unsigned char> image16x8Buffer;
 	unsigned char* imageBuffer = this->png->GetBuffer();
+	unsigned bitData = this->mode == MODE_2000 ? 0x8000 : 0x80;
 	for(int yy = 0; yy < 8; ++ yy)
 	{
 		unsigned short data = 0;
-		for(int xx = 0; xx < 16; ++ xx)
+		for(int xx = 0; xx < this->tileWidth; ++ xx)
 		{
-			int index = ((y + yy) * IMAGE_WIDTH_2000 + (x + xx)) * 4;
+			int index = ((y + yy) * this->width + (x + xx)) * 4;
 			unsigned int mask = this->maskTable[plane];
 			unsigned int pixel = *reinterpret_cast<unsigned int*>(&imageBuffer[index]);
 			unsigned short orData = 0;
 			if((pixel & mask) != 0)
 			{
-				orData = 0x8000;
+				orData = bitData;
 			}
 			data >>= 1;
 			data |= orData;
 		}
-		std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(image16x8Buffer));
+		if (this->mode == MODE_2000)
+		{
+			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(image16x8Buffer));
+		}
+		else
+		{
+			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + 1, std::back_inserter(image16x8Buffer));
+		}
 	}
 	return image16x8Buffer;
-}
-
-std::vector<unsigned char> MzImage::GetMzImage8x8(int x, int y) const
-{
-	std::vector<unsigned char> image8x8Buffer;
-	unsigned char* imageBuffer = this->png->GetBuffer();
-	for(int yy = 0; yy < 8; ++ yy)
-	{
-		unsigned char data = 0;
-		for(int xx = 0; xx < 8; ++ xx)
-		{
-			int index = ((y + yy) * IMAGE_WIDTH_80B + (x + xx)) * 4;
-			unsigned int pixel = *reinterpret_cast<unsigned int*>(&imageBuffer[index]);
-			unsigned short orData = 0;
-			if((pixel) != 0)
-			{
-				orData = 0x80;
-			}
-			data >>= 1;
-			data |= orData;
-		}
-		std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(image8x8Buffer));
-	}
-	return image8x8Buffer;
 }
 
 int MzImage::GetSamePlaneFlag(int x, int y) const
@@ -199,39 +182,29 @@ int MzImage::GetSamePlaneFlag(int x, int y) const
 // 0b100: —ÎƒvƒŒ[ƒ“‚ªˆá‚¤ 
 int MzImage::GetPlaneFlag(int x, int y) const
 {
-	int plane;
-	if(mode == MODE_2000)
+	int plane = this->mode == MODE_2000 ? 7 : 1;
+	// Â‚ªˆê‚©
+	if (IsSame(x, y, 1) == true)
 	{
-		plane = 7;
-		// Â‚ªˆê‚©
-		if (IsSame2000(x, y, 1) == true)
-		{
-			plane -= 1;
-		}
+		plane -= 1;
+	}
+	if (this->mode == MODE_2000)
+	{
 		// Ô‚ªˆê‚©
-		if (IsSame2000(x, y, 2) == true)
+		if (IsSame(x, y, 2) == true)
 		{
 			plane -= 2;
 		}
 		// Ô‚ªˆê‚©
-		if (IsSame2000(x, y, 3) == true)
+		if (IsSame(x, y, 3) == true)
 		{
 			plane -= 4;
-		}
-	}
-	else
-	{
-		plane = 1;
-		// Â‚ªˆê‚©
-		if (IsSame80B(x, y, 1) == true)
-		{
-			plane -= 1;
 		}
 	}
 	return plane;
 }
 
-bool MzImage::IsSame2000(int x, int y, int plane) const
+bool MzImage::IsSame(int x, int y, int plane) const
 {
 	if (this->beforePng == NULL)
 	{
@@ -241,34 +214,9 @@ bool MzImage::IsSame2000(int x, int y, int plane) const
 	unsigned char* imageBuffer = this->png->GetBuffer();
 	for (int yy = 0; yy < 8; ++ yy)
 	{
-		for (int xx = 0; xx < 16; ++ xx)
+		for (int xx = 0; xx < this->tileWidth; ++ xx)
 		{
-			int index = ((y + yy) * IMAGE_WIDTH_2000 + (x + xx)) * 4;
-			unsigned int mask = this->maskTable[plane];
-			unsigned int beforePixel = *reinterpret_cast<unsigned int*>(&beforeImageBuffer[index]);
-			unsigned int pixel = *reinterpret_cast<unsigned int*>(&imageBuffer[index]);
-			if ((beforePixel & mask) != (pixel & mask))
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-bool MzImage::IsSame80B(int x, int y, int plane) const
-{
-	if (this->beforePng == NULL)
-	{
-		return false;
-	}
-	unsigned char* beforeImageBuffer = this->beforePng->GetBuffer();
-	unsigned char* imageBuffer = this->png->GetBuffer();
-	for (int yy = 0; yy < 8; ++ yy)
-	{
-		for (int xx = 0; xx < 16; ++ xx)
-		{
-			int index = ((y + yy) * IMAGE_WIDTH_80B + (x + xx)) * 4;
+			int index = ((y + yy) * this->width + (x + xx)) * 4;
 			unsigned int mask = this->maskTable[plane];
 			unsigned int beforePixel = *reinterpret_cast<unsigned int*>(&beforeImageBuffer[index]);
 			unsigned int pixel = *reinterpret_cast<unsigned int*>(&imageBuffer[index]);
