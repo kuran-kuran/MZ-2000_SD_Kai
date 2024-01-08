@@ -37,6 +37,7 @@ private:
 	Png* png;
 	unsigned int samePlaneFlag[HEIGHT][WIDTH];
 	unsigned int maskTable[4];
+	unsigned int maskShift[4];
 	unsigned short vramBase;
 	unsigned short width;
 	int tileWidth;

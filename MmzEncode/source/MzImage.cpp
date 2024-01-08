@@ -7,6 +7,7 @@ MzImage::MzImage(void)
 ,png(NULL)
 ,samePlaneFlag()
 ,maskTable{0x00000000, 0x00FF0000, 0x000000FF, 0x0000FF00}
+,maskShift{0, 16, 0, 8}
 {
 	this->vramBase = this->mode == MODE_2000 ? 0xC000 : 0x6000;
 	this->width = this->mode == MODE_2000 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
@@ -63,6 +64,7 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 			// planeFlag‚ª•Ï‚í‚Á‚½Ax‚ª‰E’[‚É—ˆ‚½
 			if ((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
 			{
+				int xScale = this->mode == MODE_2000 ? 2 : 1;
 				if (x == (WIDTH - 1))
 				{
 					if (planeFlag != 0)
@@ -98,12 +100,12 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 						std::copy(tempImageBuffer.begin(), tempImageBuffer.end(), std::back_inserter(encodeBuffer));
 						imageCount = 0;
 						tempImageBuffer.clear();
-						vramAddress = this->vramBase + (y * this->width + x * 2);
+						vramAddress = this->vramBase + (y * this->width + x * xScale);
 					}
 				}
 				else
 				{
-					vramAddress = this->vramBase + (y * this->width + x * 2);
+					vramAddress = this->vramBase + (y * this->width + x * xScale);
 				}
 			}
 			// ‰æ‘œŽæ“¾
@@ -139,7 +141,7 @@ void MzImage::GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int
 
 std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) const
 {
-	std::vector<unsigned char> image16x8Buffer;
+	std::vector<unsigned char> tileImageBuffer;
 	unsigned char* imageBuffer = this->png->GetBuffer();
 	unsigned bitData = this->mode == MODE_2000 ? 0x8000 : 0x80;
 	for(int yy = 0; yy < 8; ++ yy)
@@ -151,7 +153,8 @@ std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) cons
 			unsigned int mask = this->maskTable[plane];
 			unsigned int pixel = *reinterpret_cast<unsigned int*>(&imageBuffer[index]);
 			unsigned short orData = 0;
-			if((pixel & mask) != 0)
+			unsigned int planePixel = (pixel & mask) >> this->maskShift[plane];
+			if(planePixel > 128)
 			{
 				orData = bitData;
 			}
@@ -160,14 +163,14 @@ std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) cons
 		}
 		if (this->mode == MODE_2000)
 		{
-			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(image16x8Buffer));
+			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(tileImageBuffer));
 		}
 		else
 		{
-			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + 1, std::back_inserter(image16x8Buffer));
+			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + 1, std::back_inserter(tileImageBuffer));
 		}
 	}
-	return image16x8Buffer;
+	return tileImageBuffer;
 }
 
 int MzImage::GetSamePlaneFlag(int x, int y) const

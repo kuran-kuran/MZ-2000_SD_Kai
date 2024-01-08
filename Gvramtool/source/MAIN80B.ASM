@@ -22,7 +22,7 @@
 	JP	SD_FIND_CONCAT_1BLOCK	; USR($D81B,F$) MZ2000_SD連結ファイル検索
 	JP	SD_TOP_CONCAT		; USR($D81E)    MZ2000_SD連結ファイル先頭へシーク
 	JP	SD_CLOSE_CONCAT		; USR($D821)    MZ2000_SD連結ファイルクローズ
-	JP	DRAW_MMZ		; USR($B824)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
+	JP	DRAW_MMZ		; USR($D824)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
 
 ; GVRAMにあるデータをRAMに転送する
 ; GVRAM to RAM 06000h～ 8000bytes → 0DF00h～

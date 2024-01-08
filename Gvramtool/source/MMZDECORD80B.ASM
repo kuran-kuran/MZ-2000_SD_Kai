@@ -53,7 +53,7 @@ DECORD_MMZ_3:
 	; B=描画プレーンフラグ
 	; HL=PATTERN
 	; DE=POSITION
-	CALL	PUT16x8_Color
+	CALL	PUT8x8_Color
 	DEC	C
 	JR	NZ, DECORD_MMZ_3
 	JR	DECORD_MMZ_1
@@ -64,14 +64,14 @@ COMMAND_END:
 	OUT	(0E8h), A
 	RET
 
-;16x8を指定プレーン分表示する
+;8x8を指定プレーン分表示する
 ;B : プレーン数
 ;DE: POSITION(2の倍数)
 ;HL: PATTERN
 ;破壊 A
 ;     DE: 次の座標
 ;     HL: 次のデータ
-PUT16x8_Color:
+PUT8x8_Color:
 	BIT	0, B
 	JR	Z, @F
 	LD	A, 6 ; GRAPH I1,O12
@@ -94,14 +94,14 @@ PUT16x8_Color:
 ;破壊 A
 ;     HL=HL+8
 PUT8x8:
+	PUSH	BC
 	PUSH	DE
 	PUSH	HL
-	PUSH	BC
 	LD	BC, 40
 	LD	(PUT8x8_RESTORE_STACK + 1), SP
 	LD	SP, HL
 	EX	DE, HL
-	REPT 7
+	REPT 3
 	POP	DE
 	LD	(HL), E
 	ADD	HL, BC
