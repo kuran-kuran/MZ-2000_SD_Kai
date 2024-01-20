@@ -147,6 +147,25 @@ SD_CLOSE_CONCAT1:
 	SCF
 	RET
 
+;**** 連結ファイルの次のデータがあるか ****
+; 文字列の1バイト目にレスポンスを返す
+; 0xFE:次のデータがある, 0x00:次のデータが無い(終了) 0xFF:オープンしていない
+SD_NEXT_FILE_EXIST:
+	LD	A, 0E6h      ;連結ファイルの次のデータがあるかE6h
+	CALL	SNDBYTE
+	CALL	RCVBYTE      ;状態取得(00h:OK)
+	OR	A
+	JR	NZ, SD_NEXT_FILE_EXIST2
+	CALL	RCVBYTE      ;状態取得(00h:OK, 0FFh:エラー)
+	OR	A
+SD_NEXT_FILE_EXIST1:
+	; 文字列の1バイト目にレスポンスを返す
+	LD	(DE), A
+	RET
+SD_NEXT_FILE_EXIST2:
+	LD	A, 0FFh
+	JR	SD_NEXT_FILE_EXIST1
+
 ;MZファイル名送信
 ; HL: MZファイル名 (17bytes)
 SENDMZFILENAME:
@@ -248,8 +267,10 @@ HDRC1:	CALL	RCVBYTE     ;MZファイル名受信 (17bytes)
 
 ;データ受信
 ;Result: データ (FSIZE bytes)
-;        ステータス 0xFE:次のデータがある, 0x00次のデータが無い(終了) (1bytes)
 DBRCV:	LD	DE, (FSIZE)
+	LD	A, D
+	OR	E
+	RET	Z
 	LD	HL, (SADRS)
 DBRLOP:	CALL	RCVBYTE
 	LD	(HL), A

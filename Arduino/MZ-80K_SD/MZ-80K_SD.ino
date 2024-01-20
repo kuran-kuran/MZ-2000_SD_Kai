@@ -13,6 +13,7 @@
 //
 // 以下kuran_kuranが追加
 // 2023.12.12 連結ファイル対応
+// 2024.01.21 連結ファイルオープン中の通常ファイルアクセスに対応
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -24,7 +25,8 @@ char f_name[40];
 char c_name[40];
 char new_name[40];
 // 連結ファイル
-bool isConcatOpen = false;
+char concatName[40];
+bool isConcatState = 0; // 0:未使用, 1:オープンしている
 File concatFile;
 unsigned long concatPos = 0;
 unsigned long concatSize = 0;
@@ -856,29 +858,33 @@ void boot(void){
 // Result: 0x00:OK, 0xF1:FILE NOT FIND ERROR, 0xFF:ERROR
 void ConcatFileOpen()
 {
-    // ファイルネーム取得
-    for (unsigned int lp1 = 0; lp1 <= 32; lp1 ++) {
-        f_name[lp1] = rcv1byte();
-    }
-    addmzt(f_name);
-    // ファイルが存在するか、しなければERROR
-    if (SD.exists(f_name) == true) {
-        //ファイルオープン
-        concatFile = SD.open(f_name, FILE_READ);
-        if ( true == concatFile ) {
-            concatSize = concatFile.size();
-            //状態コード送信(OK)
-            snd1byte(0x00);
-            isConcatOpen = true;
-            concatPos = 0;
-        } else {
-            //状態コード送信(ERROR)
-            snd1byte(0xFF);
-        }
+  if(isConcatState == 1)
+  {
+    concatFile.close();
+  }
+  // ファイルネーム取得
+  for (unsigned int lp1 = 0; lp1 <= 32; lp1 ++) {
+    concatName[lp1] = rcv1byte();
+  }
+  addmzt(concatName);
+  // ファイルが存在するか、しなければERROR
+  if (SD.exists(concatName) == true) {
+    //ファイルオープン
+    concatFile = SD.open(concatName, FILE_READ);
+    if ( true == concatFile ) {
+      concatSize = concatFile.size();
+      //状態コード送信(OK)
+      snd1byte(0x00);
+      isConcatState = 1; // オープンしている
+      concatPos = 0;
     } else {
-        // 状態コード送信(FILE NOT FIND ERROR)
-        snd1byte(0xF1);
+      //状態コード送信(ERROR)
+      snd1byte(0xFF);
     }
+  } else {
+    // 状態コード送信(FILE NOT FIND ERROR)
+    snd1byte(0xF1);
+  }
 }
 
 // 連結ファイルを1ブロック読み込む
@@ -891,46 +897,58 @@ void ConcatFileOpen()
 //            1byte:   ステータス: 0xFE:次のデータがある, 0x00次のデータが無い(終了)
 void ConcatFileRead()
 {
-    // モード読み捨て
-    int wk1 = concatFile.read();
-    // ファイル名
-    for (unsigned int lp1 = 0;lp1 <= 16; lp1 ++) {
-        wk1 = concatFile.read();
-        snd1byte(wk1);
+  if(isConcatState == 0)
+  {
+    // オープンしていない
+    for (unsigned int i = 0; i < 17; i ++) {
+      snd1byte(0);
     }
-    //データサイズ取得
-    int f_length2 = concatFile.read();
-    int f_length1 = concatFile.read();
-    unsigned int f_length = f_length1*256+f_length2;
-    //スタートアドレス取得
-    int s_adrs2 = concatFile.read();
-    int s_adrs1 = concatFile.read();
-    unsigned int s_adrs = s_adrs1*256+s_adrs2;
-    //実行アドレス取得
-    int g_adrs2 = concatFile.read();
-    int g_adrs1 = concatFile.read();
-    unsigned int g_adrs = g_adrs1*256+g_adrs2;
-    snd1byte(s_adrs2);
-    snd1byte(s_adrs1);
-    snd1byte(f_length2);
-    snd1byte(f_length1);
-    snd1byte(g_adrs2);
-    snd1byte(g_adrs1);
-    concatPos += 128;
-    concatFile.seek(concatPos);
-    //データ送信
-    for (unsigned int lp1 = 0;lp1 < f_length; lp1 ++) {
-        byte i_data = concatFile.read();
-        snd1byte(i_data);
-        ++ concatPos;
+    snd1byte(0xB1);
+    for (unsigned int i = 0; i < 6; i ++) {
+      snd1byte(0);
     }
-    if (concatPos < concatSize) {
-        // 次のデータがある
-        snd1byte(0xFE);
-    } else {
-        // 次のデータが無い
-        snd1byte(0x00);
-    }
+    return;
+  }
+  // モード読み捨て
+  int wk1 = concatFile.read();
+  // ファイル名
+  for (unsigned int lp1 = 0;lp1 <= 16; lp1 ++) {
+    wk1 = concatFile.read();
+    snd1byte(wk1);
+  }
+  //データサイズ取得
+  int f_length2 = concatFile.read();
+  int f_length1 = concatFile.read();
+  unsigned int f_length = f_length1*256+f_length2;
+  //スタートアドレス取得
+  int s_adrs2 = concatFile.read();
+  int s_adrs1 = concatFile.read();
+  unsigned int s_adrs = s_adrs1*256+s_adrs2;
+  //実行アドレス取得
+  int g_adrs2 = concatFile.read();
+  int g_adrs1 = concatFile.read();
+  unsigned int g_adrs = g_adrs1*256+g_adrs2;
+  snd1byte(s_adrs2);
+  snd1byte(s_adrs1);
+  snd1byte(f_length2);
+  snd1byte(f_length1);
+  snd1byte(g_adrs2);
+  snd1byte(g_adrs1);
+  concatPos += 128;
+  concatFile.seek(concatPos);
+  //データ送信
+  for (unsigned int lp1 = 0;lp1 < f_length; lp1 ++) {
+    byte i_data = concatFile.read();
+    snd1byte(i_data);
+    ++ concatPos;
+  }
+  if (concatPos < concatSize) {
+    // 次のデータがある
+    snd1byte(0xFE);
+  } else {
+    // 次のデータが無い
+    snd1byte(0x00);
+  }
 }
 
 // 連結ファイルを1ブロックスキップ
@@ -938,30 +956,31 @@ void ConcatFileRead()
 // Result: 0xFE:次のデータがある, 0x00:次のデータが無い(終了), 0xFF:オープンしていない
 void ConcatFileSkip()
 {
-    if(isConcatOpen == false)
-    {
-        snd1byte(0xFF);
-        return;
-    }
-    // モード読み捨て
-    int wk1 = concatFile.read();
-    // ファイル名
-    for(unsigned int lp1 = 0;lp1 <= 16; lp1 ++) {
-        wk1 = concatFile.read();
-    }
-    //データサイズ取得
-    int f_length2 = concatFile.read();
-    int f_length1 = concatFile.read();
-    unsigned int f_length = f_length1*256+f_length2;
-    concatPos += (128 + f_length);
-    concatFile.seek(concatPos);
-    if (concatPos < concatSize) {
-        // 次のデータがある
-        snd1byte(0xFE);
-    } else {
-        // 次のデータが無い
-        snd1byte(0x00);
-    }
+  if(isConcatState == 0)
+  {
+    // オープンしていない
+    snd1byte(0xFF);
+    return;
+  }
+  // モード読み捨て
+  int wk1 = concatFile.read();
+  // ファイル名
+  for(unsigned int lp1 = 0;lp1 <= 16; lp1 ++) {
+    wk1 = concatFile.read();
+  }
+  //データサイズ取得
+  int f_length2 = concatFile.read();
+  int f_length1 = concatFile.read();
+  unsigned int f_length = f_length1*256+f_length2;
+  concatPos += (128 + f_length);
+  concatFile.seek(concatPos);
+  if (concatPos < concatSize) {
+    // 次のデータがある
+    snd1byte(0xFE);
+  } else {
+    // 次のデータが無い
+    snd1byte(0x00);
+  }
 }
 
 // 連結ファイルからブロックを探す
@@ -969,52 +988,52 @@ void ConcatFileSkip()
 // Result: 0x00:OK, 0xF1:FILE NOT FIND, 0xFF:オープンしていない
 void ConcatFileFind()
 {
-    unsigned long concatPosBackup = concatPos;
+  if(isConcatState == 0) {
+    snd1byte(0xFF);
+    return;
+  }
+  unsigned long concatPosBackup = concatPos;
+  // ファイル名
+  for (unsigned int lp1 = 0;lp1 < 17; lp1 ++) {
+    f_name[lp1] = concatFile.read();
+    if(m_name[lp1] == 0x0D) {
+      f_name[lp1] = 0;
+    }
+  }
+  f_name[17] = 0;
+  // 検索する
+  while(1) {
+    // モード読み捨て
+    int wk1 = concatFile.read();
     // ファイル名
     for (unsigned int lp1 = 0;lp1 < 17; lp1 ++) {
-        f_name[lp1] = concatFile.read();
-        if(m_name[lp1] == 0x0D) {
-            f_name[lp1] = 0;
-        }
+      m_name[lp1] = concatFile.read();
+      if(m_name[lp1] == 0x0D) {
+        m_name[lp1] = 0;
+      }
     }
-    f_name[17] = 0;
-    if(isConcatOpen == false) {
-        snd1byte(0xFF);
+    m_name[17] = 0;
+    //データサイズ取得
+    int f_length2 = concatFile.read();
+    int f_length1 = concatFile.read();
+    unsigned int f_length = f_length1*256+f_length2;
+    if(String(f_name).equals(String(m_name)) == true) {
+      // 見つけた
+      concatFile.seek(concatPos);
+      break;
+    } else {
+      // 次のファイル
+      concatPos += (128 + f_length);
+      if (concatPos >= concatSize) {
+        // 見つからなかった
+        concatFile.seek(concatPosBackup);
+        snd1byte(0xF1);
         return;
+      }
+      concatFile.seek(concatPos);
     }
-    // 検索する
-    while(1) {
-        // モード読み捨て
-        int wk1 = concatFile.read();
-        // ファイル名
-        for (unsigned int lp1 = 0;lp1 < 17; lp1 ++) {
-            m_name[lp1] = concatFile.read();
-            if(m_name[lp1] == 0x0D) {
-                m_name[lp1] = 0;
-            }
-        }
-        m_name[17] = 0;
-        //データサイズ取得
-        int f_length2 = concatFile.read();
-        int f_length1 = concatFile.read();
-        unsigned int f_length = f_length1*256+f_length2;
-        if(String(f_name).equals(String(m_name)) == true) {
-            // 見つけた
-            concatFile.seek(concatPos);
-            break;
-        } else {
-            // 次のファイル
-            concatPos += (128 + f_length);
-            if (concatPos >= concatSize) {
-                // 見つからなかった
-                concatFile.seek(concatPosBackup);
-                snd1byte(0xF1);
-                return;
-            }
-            concatFile.seek(concatPos);
-        }
-    }
-    snd1byte(0x00);
+  }
+  snd1byte(0x00);
 }
 
 // 連結ファイルのトップに戻る
@@ -1022,13 +1041,13 @@ void ConcatFileFind()
 // Result: 0x00:OK, 0xF1:FILE NOT FIND ERROR, 0xFF:オープンしていない
 void ConcatFileTop()
 {
-    if(isConcatOpen == false) {
-        snd1byte(0xFF);
-        return;
-    }
-    concatPos = 0;
-    concatFile.seek(concatPos);
-    snd1byte(0x00);
+  if(isConcatState == 0) {
+    snd1byte(0xFF);
+    return;
+  }
+  concatPos = 0;
+  concatFile.seek(concatPos);
+  snd1byte(0x00);
 }
 
 // 連結ファイルクローズ
@@ -1036,13 +1055,30 @@ void ConcatFileTop()
 // Result: 0x00:OK, 0xF1:FILE NOT FIND ERROR, 0xFF:オープンしていない
 void ConcatFileClose()
 {
-    if(isConcatOpen == false) {
-        snd1byte(0xFF);
-        return;
-    }
+  if(isConcatState == 0) {
+    snd1byte(0xFF);
+    return;
+  } else if(isConcatState == 1) {
     concatFile.close();
-    isConcatOpen = false;
+  }
+  isConcatState = 0;
+  snd1byte(0x00);
+}
+
+// 連結ファイルの次のデータがあるか
+// Result: 0xFE:次のデータがある, 0x00:次のデータが無い(終了) 0xFF:オープンしていない
+void ConcatFileState(void)
+{
+  if(isConcatState == 0) {
+    // オープンしていない
+    snd1byte(0xFF);
+  } else if (concatPos < concatSize) {
+    // 次のデータがある
+    snd1byte(0xFE);
+  } else {
+    // 次のデータが無い
     snd1byte(0x00);
+  }
 }
 
 void loop()
@@ -1060,6 +1096,12 @@ void loop()
 ////  Serial.print("cmd:");
   byte cmd = rcv1byte();
 ////  Serial.println(cmd,HEX);
+  if((cmd < 0xE0) && (isConcatState == 1))
+  {
+    // 連結ファイルオープン中に通常ファイルコマンドが来たので連結ファイルはクローズする
+    concatFile.close();
+    isConcatState = 0;
+  }
   if (eflg == false){
     switch(cmd) {
 //80hでSDカードにsave
@@ -1190,6 +1232,12 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         ConcatFileClose();
+        break;
+//0E6hで連結ファイルの次のデータがあるか
+      case 0xE6:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        ConcatFileState();
         break;
 
       default:
