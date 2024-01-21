@@ -995,12 +995,13 @@ void ConcatFileFind()
   unsigned long concatPosBackup = concatPos;
   // ファイル名
   for (unsigned int lp1 = 0;lp1 < 17; lp1 ++) {
-    f_name[lp1] = concatFile.read();
-    if(m_name[lp1] == 0x0D) {
+    f_name[lp1] = rcv1byte();
+    if(f_name[lp1] == 0x0D) {
       f_name[lp1] = 0;
     }
   }
   f_name[17] = 0;
+  snd1byte(0x00);
   // 検索する
   while(1) {
     // モード読み捨て
@@ -1017,7 +1018,7 @@ void ConcatFileFind()
     int f_length2 = concatFile.read();
     int f_length1 = concatFile.read();
     unsigned int f_length = f_length1*256+f_length2;
-    if(String(f_name).equals(String(m_name)) == true) {
+    if(String(f_name).equals(m_name) == true) {
       // 見つけた
       concatFile.seek(concatPos);
       break;

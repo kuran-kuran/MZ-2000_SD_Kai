@@ -28,6 +28,18 @@ SD_USR_READ_CONCAT_1BLOCK:
 	CALL	SD_READ_CONCAT_1BLOCK
 	RET
 
+SD_USR_FIND_CONCAT_1BLOCK:
+	LD	H, D
+	LD	L, E
+	CALL	SD_FIND_CONCAT_1BLOCK
+	RET
+
+SD_USR_NEXT_FILE_EXIST:
+	CALL	SD_NEXT_FILE_EXIST
+	; 文字列の1バイト目にレスポンスを返す
+	LD	(DE), A
+	RET
+
 ;**** 通常ファイル読み込み ****
 ; 通常ファイル読み込み
 ; HL: SDファイル名
@@ -149,7 +161,7 @@ SD_CLOSE_CONCAT1:
 
 ;**** 連結ファイルの次のデータがあるか ****
 ; 文字列の1バイト目にレスポンスを返す
-; 0xFE:次のデータがある, 0x00:次のデータが無い(終了) 0xFF:オープンしていない
+; Result A: 0xFE:次のデータがある, 0x00:次のデータが無い(終了) 0xFF:オープンしていない
 SD_NEXT_FILE_EXIST:
 	LD	A, 0E6h      ;連結ファイルの次のデータがあるかE6h
 	CALL	SNDBYTE
@@ -159,34 +171,17 @@ SD_NEXT_FILE_EXIST:
 	CALL	RCVBYTE      ;状態取得(00h:OK, 0FFh:エラー)
 	OR	A
 SD_NEXT_FILE_EXIST1:
-	; 文字列の1バイト目にレスポンスを返す
-	LD	(DE), A
 	RET
 SD_NEXT_FILE_EXIST2:
 	LD	A, 0FFh
+	SCF
 	JR	SD_NEXT_FILE_EXIST1
 
 ;MZファイル名送信
 ; HL: MZファイル名 (17bytes)
 SENDMZFILENAME:
 	LD	B, 17
-SENDMZFILENAME1:
-	LD	A, (HL)
-	INC	HL
-	OR	A
-	JR	Z, SENDFILENAME2
-	CALL	SNDBYTE
-	DEC	B
-	JR	NZ, SENDMZFILENAME1
-	JR	SENDMZFILENAME3
-SENDMZFILENAME2:
-	XOR	A
-	CALL	SNDBYTE
-	DEC	B
-	JR	NZ, SENDMZFILENAME2
-SENDMZFILENAME3:
-	CALL	RCVBYTE      ;状態取得(00H=OK)
-	RET
+	JR	SENDFILENAME1
 
 ;ファイル名送信
 ; HL: SDファイル名 (33bytes)
