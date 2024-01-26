@@ -2,16 +2,20 @@
 #include "MzImage.hpp"
 
 MzImage::MzImage(void)
-:mode(MODE_2000)
+:screen(SCREEN_640x200)
+,mode(MODE_16x8)
+,color(8)
 ,beforePng(NULL)
 ,png(NULL)
 ,samePlaneFlag()
+,samePlaneFlagWidth(40)
+,samePlaneFlagHeight(25)
 ,maskTable{0x00000000, 0x00FF0000, 0x000000FF, 0x0000FF00}
 ,maskShift{0, 16, 0, 8}
+,tileWidth(16)
+,tileHeight(8)
 {
-	this->vramBase = this->mode == MODE_2000 ? 0xC000 : 0x6000;
-	this->width = this->mode == MODE_2000 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
-	this->tileWidth = this->mode == MODE_2000 ? 16 : 8;
+	SetMode(this->mode);
 }
 
 MzImage::~MzImage(void)
@@ -26,21 +30,39 @@ void MzImage::SetBeforeImage(Png* beforePng)
 void MzImage::SetImage(Png* png)
 {
 	this->png = png;
-	for (int y = 0; y < HEIGHT; ++ y)
+	for (int y = 0; y < this->samePlaneFlagHeight; ++ y)
 	{
-		for (int x = 0; x < WIDTH; ++ x)
+		for (int x = 0; x < this->samePlaneFlagWidth; ++ x)
 		{
-			this->samePlaneFlag[y][x] = GetPlaneFlag(x * this->tileWidth, y * 8);
+			SetSamePlaneFlag(x, y, GetPlaneFlag(x * this->tileWidth, y * this->tileHeight));
 		}
 	}
+}
+
+void MzImage::SetScreen(int screen)
+{
+	this->screen = screen;
+	SetMode(this->mode);
 }
 
 void MzImage::SetMode(int mode)
 {
 	this->mode = mode;
-	this->vramBase = this->mode == MODE_2000 ? 0xC000 : 0x6000;
-	this->width = this->mode == MODE_2000 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
-	this->tileWidth = this->mode == MODE_2000 ? 16 : 8;
+	this->vramBase = this->mode == MODE_16x8 ? 0xC000 : 0x6000;
+	this->width = this->screen == SCREEN_640x200 ? IMAGE_WIDTH_2000 : IMAGE_WIDTH_80B;
+	this->tileWidth = this->mode == MODE_16x8 ? 16 : 8;
+	this->tileHeight = this->mode == MODE_8x4 ? 4 : 8;
+	this->samePlaneFlagHeight = this->mode == MODE_8x4 ? 50 : 25;
+	if(this->samePlaneFlag != NULL)
+	{
+		delete [] this->samePlaneFlag;
+	}
+	this->samePlaneFlag = new unsigned int[this->samePlaneFlagWidth * this->samePlaneFlagHeight];
+}
+
+void MzImage::SetColor(int color)
+{
+	this->color = color;
 }
 
 std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
@@ -48,7 +70,7 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 	std::vector<std::vector<unsigned char>> encodeBufferList;
 	std::vector<unsigned char> encodeBuffer;
 	std::vector<unsigned char> tempImageBuffer;
-	for (int y = 0; y < HEIGHT; ++ y)
+	for (int y = 0; y < this->samePlaneFlagHeight; ++ y)
 	{
 		// 0: 最初の画像検索、見つかったらアドレス保存
 		int phase = 0;
@@ -58,14 +80,14 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 		int imageCount = 0;
 		unsigned short vramAddress = 0;
 		bool addFlag = false;
-		for (int x = 0; x < WIDTH; ++ x)
+		for (int x = 0; x < this->samePlaneFlagWidth; ++ x)
 		{
-			unsigned int planeFlag = this->samePlaneFlag[y][x];
+			unsigned int planeFlag = GetSamePlaneFlag(x, y);
 			// planeFlagが変わった、xが右端に来た
-			if ((planeFlag != beforePlaneFlag) || (x == (WIDTH - 1)))
+			if ((planeFlag != beforePlaneFlag) || (x == (this->samePlaneFlagWidth - 1)))
 			{
-				int xScale = this->mode == MODE_2000 ? 2 : 1;
-				if (x == (WIDTH - 1))
+				int xScale = this->mode == MODE_16x8 ? 2 : 1;
+				if (x == (this->samePlaneFlagWidth - 1))
 				{
 					if (planeFlag != 0)
 					{
@@ -125,7 +147,7 @@ std::vector<std::vector<unsigned char>> MzImage::GetEncodeData(void)
 void MzImage::GetMzImage(std::vector<unsigned char>& tempImageBuffer, int x, int y, unsigned int planeFlag)
 {
 	int xx = x * this->tileWidth;
-	int y8 = y * 8;
+	int y8 = y * this->tileHeight;
 	unsigned int mask = 1;
 	for (int i = 1; i <= 3; ++i)
 	{
@@ -143,8 +165,8 @@ std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) cons
 {
 	std::vector<unsigned char> tileImageBuffer;
 	unsigned char* imageBuffer = this->png->GetBuffer();
-	unsigned bitData = this->mode == MODE_2000 ? 0x8000 : 0x80;
-	for(int yy = 0; yy < 8; ++ yy)
+	unsigned bitData = this->mode == MODE_16x8 ? 0x8000 : 0x80;
+	for(int yy = 0; yy < this->tileHeight; ++ yy)
 	{
 		unsigned short data = 0;
 		for(int xx = 0; xx < this->tileWidth; ++ xx)
@@ -161,12 +183,14 @@ std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) cons
 			data >>= 1;
 			data |= orData;
 		}
-		if (this->mode == MODE_2000)
+		if (this->mode == MODE_16x8)
 		{
+			// 2バイト追加
 			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + sizeof(data), std::back_inserter(tileImageBuffer));
 		}
 		else
 		{
+			// 1バイト追加
 			std::copy(reinterpret_cast<unsigned char*>(&data), reinterpret_cast<unsigned char*>(&data) + 1, std::back_inserter(tileImageBuffer));
 		}
 	}
@@ -175,8 +199,14 @@ std::vector<unsigned char> MzImage::GetMzTileImage(int x, int y, int plane) cons
 
 int MzImage::GetSamePlaneFlag(int x, int y) const
 {
-	return this->samePlaneFlag[y][x];
+	return this->samePlaneFlag[y * this->samePlaneFlagWidth + x];
 }
+
+void MzImage::SetSamePlaneFlag(int x, int y, unsigned int flag)
+{
+	this->samePlaneFlag[y * this->samePlaneFlagWidth + x] = flag;
+}
+
 
 // Result:
 // 0: 全部同じ
@@ -185,13 +215,13 @@ int MzImage::GetSamePlaneFlag(int x, int y) const
 // 0b100: 緑プレーンが違う 
 int MzImage::GetPlaneFlag(int x, int y) const
 {
-	int plane = this->mode == MODE_2000 ? 7 : 1;
+	int plane = this->color == COLOR_8 ? 7 : 1;
 	// 青が一緒か
 	if (IsSame(x, y, 1) == true)
 	{
 		plane -= 1;
 	}
-	if (this->mode == MODE_2000)
+	if (this->color == COLOR_8)
 	{
 		// 赤が一緒か
 		if (IsSame(x, y, 2) == true)
@@ -215,7 +245,7 @@ bool MzImage::IsSame(int x, int y, int plane) const
 	}
 	unsigned char* beforeImageBuffer = this->beforePng->GetBuffer();
 	unsigned char* imageBuffer = this->png->GetBuffer();
-	for (int yy = 0; yy < 8; ++ yy)
+	for (int yy = 0; yy < this->tileHeight; ++ yy)
 	{
 		for (int xx = 0; xx < this->tileWidth; ++ xx)
 		{

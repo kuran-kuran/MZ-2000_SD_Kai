@@ -16,9 +16,11 @@ extern "C"
 static const char* const NAME = "MZ画像エンコードプログラム";
 static const char* const VERSION = "1.0.0";
 static const char* const FILENAME = "MmzEccode";
-static const unsigned int OPTION_HELP = 0x00000001;
-static const unsigned int OPTION_80B  = 0x00000002;
-static const unsigned int OPTION_ADD  = 0x00000004;
+static const unsigned int OPTION_HELP    = 0x00000001;
+static const unsigned int OPTION_80B     = 0x00000002;
+static const unsigned int OPTION_ADD     = 0x00000004;
+static const unsigned int OPTION_8x4     = 0x00000008;
+static const unsigned int OPTION_COLOR1  = 0x00000010;
 
 int main(int argc, char* argv[])
 {
@@ -56,6 +58,14 @@ int main(int argc, char* argv[])
 						else if (_strnicmp(&argv[i][1], "ADD", 3) == 0)
 						{
 							option |= OPTION_ADD;
+						}
+						else if (_strnicmp(&argv[i][1], "8x4", 3) == 0)
+						{
+							option |= OPTION_8x4;
+						}
+						else if (_strnicmp(&argv[i][1], "COLOR1", 6) == 0)
+						{
+							option |= OPTION_COLOR1;
 						}
 					}
 					else
@@ -166,7 +176,36 @@ int main(int argc, char* argv[])
 		MzImage mzImage;
 		if (option & OPTION_80B)
 		{
-			mzImage.SetMode(MzImage::MODE_80B);
+			mzImage.SetScreen(MzImage::SCREEN_320x200);
+			mzImage.SetColor(MzImage::COLOR_1);
+			if (option & OPTION_8x4)
+			{
+				mzImage.SetMode(MzImage::MODE_8x4);
+			}
+			else
+			{
+				mzImage.SetMode(MzImage::MODE_8x8);
+			}
+		}
+		else
+		{
+			mzImage.SetScreen(MzImage::SCREEN_640x200);
+			if (option & OPTION_COLOR1)
+			{
+				mzImage.SetColor(MzImage::COLOR_1);
+			}
+			else
+			{
+				mzImage.SetColor(MzImage::COLOR_8);
+			}
+			if (option & OPTION_8x4)
+			{
+				mzImage.SetMode(MzImage::MODE_8x4);
+			}
+			else
+			{
+				mzImage.SetMode(MzImage::MODE_16x8);
+			}
 		}
 		if (isBeforeValid == true)
 		{

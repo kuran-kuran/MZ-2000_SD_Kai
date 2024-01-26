@@ -398,7 +398,8 @@ void	encode( unsigned char* in_buffer, size_t in_buffer_size, unsigned char* out
 {
 	int 	i, c, r, s, len, mlen;
 	char	ok_delete_node;
-	unsigned long int	incount = 0, printcount = 0, cr;
+	unsigned long int	incount = 0, printcount = 0;
+	//unsigned long int	cr;
 	size_t in_buffer_index = 0;
 
 	outcount = 0;
