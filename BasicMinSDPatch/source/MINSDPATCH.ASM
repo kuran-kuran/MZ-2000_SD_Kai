@@ -129,8 +129,9 @@ SNDBYTE:
 	CALL	SND4BIT
 	POP	AF
 	AND	0Fh
-	CALL	SND4BIT
-	RET
+	; メモリ最適化のためコメントアウト
+	; CALL	SND4BIT
+	; RET
 
 ;**** 4BIT送信 ****
 ;Aレジスタ下位4ビットを送信する
@@ -141,23 +142,24 @@ SND4BIT:
 	CALL	F1CHK ; PORTC BIT7が1になるまでLOOP
 	LD	A,04h
 	OUT	(0A3h), A ; PORTC BIT2 <- 0
-	CALL	F2CHK
-	RET
-
-;**** BUSYをCHECK(1) ****
-; 82H BIT7が1になるまでLOP
-F1CHK:
-	IN	A, (0A2h)
-	AND	80h ; PORTC BIT7 = 1?
-	JR	Z, F1CHK
-	RET
+	; メモリ最適化のためコメントアウト
+	; CALL	F2CHK
+	; RET
 
 ;**** BUSYをCHECK(0) ****
-; 82H BIT7が0になるまでLOOP
+; PORTC BIT7が0になるまでLOOP
 F2CHK:
 	IN	A, (0A2h)
 	AND	80h ; PORTC BIT7 = 0?
 	JR	NZ, F2CHK
+	RET
+
+;**** BUSYをCHECK(1) ****
+; PORTC BIT7が1になるまでLOP
+F1CHK:
+	IN	A, (0A2h)
+	AND	80h ; PORTC BIT7 = 1?
+	JR	Z, F1CHK
 	RET
 
 	END 000B1h
