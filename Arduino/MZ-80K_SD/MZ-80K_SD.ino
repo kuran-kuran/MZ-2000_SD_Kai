@@ -14,6 +14,7 @@
 // 以下kuran_kuranが追加
 // 2023.12.12 連結ファイル対応
 // 2024.01.21 連結ファイルオープン中の通常ファイルアクセスに対応
+// 2024.05.08 MIDIコマンド送信に対応
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -50,7 +51,7 @@ unsigned long concatSize = 0;
 boolean eflg;
 
 void setup(){
-  Serial.begin(38400);
+  Serial.begin(31250); // MIDI
 
 ////  Serial.begin(9600);
 // CS=pin10
@@ -1067,6 +1068,7 @@ void ConcatFileClose()
 }
 
 // 連結ファイルの次のデータがあるか
+// 0xE6
 // Result: 0xFE:次のデータがある, 0x00:次のデータが無い(終了) 0xFF:オープンしていない
 void ConcatFileState(void)
 {
@@ -1079,6 +1081,19 @@ void ConcatFileState(void)
   } else {
     // 次のデータが無い
     snd1byte(0x00);
+  }
+}
+
+// MIDIコマンド送信
+// 0xE7, 送信バイト数, 送信データ
+// Result:  0x00:エラー無し, 0xFF:エラー
+void SendMidi(void)
+{
+  byte length = rcv1byte();
+  for(byte i = 0; i < length; i ++)
+  {
+    byte data = rcv1byte();
+    Serial.write(data);
   }
 }
 
@@ -1239,6 +1254,13 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         ConcatFileState();
+        break;
+
+//0E7hでMIDIコマンド送信
+      case 0xE7:
+//状態コード送信(OK)
+        snd1byte(0x00);
+        SendMidi();
         break;
 
       default:
