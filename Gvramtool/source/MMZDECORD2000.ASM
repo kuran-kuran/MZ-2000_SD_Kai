@@ -3,6 +3,7 @@ DRAW_MMZ1:
 	; データロード
 	CALL	SD_READ_CONCAT_1BLOCK
 	; データ展開
+DRAW_MMZ2:
 	LD	HL, 0C000h + 4
 	LD	DE, 09800h
 	CALL	DECODE_LZE
@@ -13,6 +14,11 @@ DRAW_MMZ1:
 	JR	Z, DRAW_MMZ1
 	; 0Ah以外 (0Bh終了)
 	RET
+
+; 指定されたMMZファイルを読み込み画像1画面分表示
+DRAW_MMZ_FILE:
+	CALL	SD_USR_LOAD
+	JR	DRAW_MMZ2
 
 ;Mmzをデコードして画面に描画する
 ;HL: Mmzデータ
