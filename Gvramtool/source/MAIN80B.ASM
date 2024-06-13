@@ -24,7 +24,7 @@
 	JP	SD_CLOSE_CONCAT			; USR($D821)    MZ2000_SD連結ファイルクローズ
 	JP	DRAW_MMZ			; USR($D824)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
 	JP	SD_USR_NEXT_FILE_EXIST		; USR($D827,R$)	MZ2000_SD連結ファイルの次のデータがあるか
-	JP	DRAW_MMZ_FILE			; USR($D89A,F$)	指定されたMMZファイルを読み込み画像1画面分表示
+	JP	DRAW_MMZ_FILE			; USR($D82A,F$)	指定されたMMZファイルを読み込み画像1画面分表示
 
 ; GVRAMにあるデータをRAMに転送する
 ; GVRAM to RAM 06000h～ 8000bytes → 0DF00h～
