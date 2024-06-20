@@ -41,9 +41,24 @@ namespace PatchGUI
             if(result == CommonFileDialogResult.Ok)
             {
                 mztFile.Text = dlg.FileName;
-                var output = dlg.FileName;
-                var sdOutput = Regex.Replace(output, ".mzt", "(SD).mzt", RegexOptions.IgnoreCase);
-                outputFile.Text = sdOutput;
+                var jsonFileName = Path.GetFileName(jsonFile.Text);
+                var fileDirectry = Path.GetDirectoryName(mztFile.Text);
+                if (jsonFileName == "mz-1z001m.json")
+                {
+                    var output = fileDirectry + "\\@BOOT-A MZ-2000.bin";
+                    outputFile.Text = output;
+                }
+                else if (jsonFileName == "sb-1520.json")
+                {
+                    var output = fileDirectry + "\\@BOOT-A MZ-80B.bin";
+                    outputFile.Text = output;
+                }
+                else
+                {
+                    var output = dlg.FileName;
+                    var sdOutput = Regex.Replace(output, ".mzt", "(SD).mzt", RegexOptions.IgnoreCase);
+                    outputFile.Text = sdOutput;
+                }
             }
         }
 
@@ -70,7 +85,7 @@ namespace PatchGUI
                 var startInfo = new ProcessStartInfo()
                 {
                     FileName = @".\Patch.exe",
-                    Arguments = $"{jsonFile.Text} {mztFile.Text} {outputFile.Text}",
+                    Arguments = $"\"{jsonFile.Text}\" \"{mztFile.Text}\" \"{outputFile.Text}\"",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true

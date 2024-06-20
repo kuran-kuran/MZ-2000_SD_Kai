@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PatchGUI"
         mc:Ignorable="d"
-        Title="パッチ当てプログラム" Height="347.19" Width="634.831">
+        Title="mz2000_sdパッチ当てプログラム" Height="347.19" Width="634.831">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="361*"/>
