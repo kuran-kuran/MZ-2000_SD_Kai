@@ -20,7 +20,7 @@
 		{
 			"Url": "https://github.com/yanataka60/MZ-2000_SD/raw/main/EXT-ROM/EXT-ROM_SD MZ-2000.bin",
 			"File": "EXT-ROM\\EXT-ROM_SD MZ-2000.bin",
-			"Address": "12A0"
+			"Address": "1320"
 		}
 	],
 	"SaveFile": {
