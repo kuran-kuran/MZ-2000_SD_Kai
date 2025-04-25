@@ -16,6 +16,7 @@
 // 2023.12.12 連結ファイル対応
 // 2024.01.21 連結ファイルオープン中の通常ファイルアクセスに対応
 // 2024.05.08 MIDIコマンド送信に対応
+// 2025.04.26 D88ファイルに対応
 //
 #include "SdFat.h"
 #include <SPI.h>
@@ -32,6 +33,21 @@ bool isConcatState = 0; // 0:未使用, 1:オープンしている
 File concatFile;
 unsigned long concatPos = 0;
 unsigned long concatSize = 0;
+// D88
+char d88Name[40];
+bool isD88State = 0; // 0:未使用, 1:オープンしている
+bool reverse = false;
+File d88File;
+int seekInfoPointer = 0;
+int seekDataPointer = 0;
+int seekDataOffset = 0;
+char c = 0;
+char h = 0;
+char r = 0;
+char n = 0;
+short numberOfSector = 0;
+short sizeOfData = 0;
+short sectorsPerTrack = 0;
 
 #define CABLESELECTPIN  (10)
 #define CHKPIN          (15)
@@ -1122,6 +1138,266 @@ void SendMidi(void)
   }
 }
 
+// D88関連
+bool Open(const char* path)
+{
+	d88File = SD.open(path, O_READ | O_APPEND);
+	if(d88File == true)
+	{
+		return false;
+	}
+	return true;
+}
+
+void Close(void)
+{
+  d88File.close();
+}
+
+unsigned char Read(void)
+{
+	unsigned char buffer = (unsigned char)d88File.read();
+	return buffer;
+}
+
+void Write(unsigned char data)
+{
+	d88File.write(data);
+}
+
+void Seek(int pos)
+{
+	d88File.seek((unsigned long)pos);
+}
+
+bool D88Open(const char* path, bool r)
+{
+	if(Open(path) == false)
+	{
+		return false;
+	}
+	D88Seek(0, 1);
+	sectorsPerTrack = numberOfSector;
+	reverse = r;
+	return true;
+}
+
+void D88Close(void)
+{
+	Close();
+}
+
+void D88SetSectorsPerTrack(short num)
+{
+	sectorsPerTrack = num;
+}
+
+// track:  0 -
+// sector: 1 -
+bool D88Seek(char track, char sector)
+{
+	int cyl = track / 2;
+	int hed = track % 2;
+	if(reverse == true)
+	{
+		hed = 1 - hed;
+	}
+	int seekTrack = cyl * 2 + hed;
+	int seek = 32 + seekTrack * 4;
+	unsigned char buffer;
+	Seek(seek);
+	buffer = Read();
+	int offset = (int)buffer;
+	buffer = Read();
+	offset = offset | buffer << 8;
+	buffer = Read();
+	offset = offset | buffer << 16;
+	buffer = Read();
+	offset = offset | buffer << 24;
+	// offset: start of track
+	int i = 1;
+	for(;;)
+	{
+		// search sector
+		Seek(offset);
+		c = Read();
+		h = Read();
+		r = Read();
+		n = Read();
+		buffer = Read();
+		numberOfSector = buffer;
+		buffer = Read();
+		numberOfSector = numberOfSector | buffer << 8;
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		buffer = Read();
+		sizeOfData = buffer;
+		buffer = Read();
+		sizeOfData = sizeOfData | buffer << 8;
+		if(r == sector)
+		{
+			break;
+		}
+		++ i;
+		if(i >= numberOfSector)
+		{
+			return false;
+		}
+		offset += 16;
+		offset += sizeOfData;
+	}
+	seekInfoPointer = offset;
+	seekDataPointer = offset + 16;
+	// seek data area
+	Seek(seekDataPointer);
+	seekDataOffset = 0;
+	return true;
+}
+
+bool D88SeekLba(int lba)
+{
+	int track = lba / sectorsPerTrack;
+	int sector = lba % sectorsPerTrack + 1;
+	return D88Seek(track, sector);
+}
+
+int D88GetSectorSize(void)
+{
+	return (int)sizeOfData;
+}
+
+unsigned char D88Read(void)
+{
+	if(seekDataOffset >= sizeOfData)
+	{
+		return 0;
+	}
+	unsigned char buffer = Read();
+	++ seekDataOffset;
+	if(reverse == true)
+	{
+		buffer = buffer ^ 255;
+	}
+	return buffer;
+}
+
+void D88Write(unsigned char data)
+{
+	if(seekDataOffset >= sizeOfData)
+	{
+		return;
+	}
+	Write(data);
+	++ seekDataOffset;
+}
+
+// D88ファイル一覧
+// 0E8h
+void d88FileList(void)
+{
+}
+
+// D88読み込みOpen
+// 0E9h
+void d88OpenRead(void)
+{
+  // ファイルネーム取得
+  for (unsigned int lp1 = 0; lp1 <= 32; lp1 ++)
+  {
+    d88Name[lp1] = rcv1byte();
+  }
+  addmzt(d88Name);
+  //ファイルオープン
+  if(D88Open(d88Name, true) == true)
+  {
+    //状態コード送信(OK)
+    snd1byte(0x00);
+    isD88State = 1; // オープンしている
+  }
+  else
+  {
+    // 状態コード送信(FILE NOT FIND ERROR)
+    snd1byte(0xF1);
+    sdinit();
+  }
+}
+
+// D88書き込みOpen
+// 0EAh
+void d88OpenWrite(void)
+{
+  // ファイルネーム取得
+  for (unsigned int lp1 = 0; lp1 <= 32; lp1 ++)
+  {
+    d88Name[lp1] = rcv1byte();
+  }
+  addmzt(d88Name);
+  //ファイルオープン
+  if(D88Open(d88Name, true) == true)
+  {
+    //状態コード送信(OK)
+    snd1byte(0x00);
+    isD88State = 1; // オープンしている
+  }
+  else
+  {
+    // 状態コード送信(FILE NOT FIND ERROR)
+    snd1byte(0xF1);
+    sdinit();
+  }
+}
+
+// D88Close
+// 0EBh
+void d88Close(void)
+{
+  if(isD88State == 0)
+  {
+    snd1byte(0xFF);
+    return;
+  }
+  else
+  {
+    D88Close();
+  }
+  isD88State = 0;
+  snd1byte(0x00);
+}
+
+// D88セクタ読み込み
+// 0ECh
+void d88ReadLba(void)
+{
+  unsigned short lba = concatFile.read();
+  lba |= concatFile.read() * 256;
+  if(isConcatState == 0)
+  {
+    snd1byte(0xFF);
+    return;
+  }
+  D88SeekLba((int)lba);
+  for(int i = 0; i < 256; ++ i)
+  {
+    unsigned char data = D88Read();
+    snd1byte(data);
+  }
+  // 転送終了
+  snd1byte(0x00);
+}
+
+// D88セクタ書き込み
+// 0EDh
+void d88WriteLba(void)
+{
+}
+
+// メインループ
 void loop()
 {
   digitalWrite(PB0PIN,LOW);
@@ -1287,6 +1563,37 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         SendMidi();
+        break;
+
+// 0E8hでD88ファイル一覧
+      case 0xE8:
+        snd1byte(0x00);
+        d88FileList();
+        break;
+
+      case 0xE9:
+        snd1byte(0x00);
+        d88OpenRead();
+        break;
+
+      case 0xEA:
+        snd1byte(0x00);
+        d88OpenWrite();
+        break;
+
+      case 0xEB:
+        snd1byte(0x00);
+        d88Close();
+        break;
+
+      case 0xEC:
+        snd1byte(0x00);
+        d88ReadLba();
+        break;
+
+      case 0xED:
+        snd1byte(0x00);
+        d88WriteLba();
         break;
 
       default:
