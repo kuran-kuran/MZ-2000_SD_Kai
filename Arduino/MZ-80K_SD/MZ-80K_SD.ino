@@ -29,13 +29,13 @@ char c_name[40];
 char new_name[40];
 // 連結ファイル
 char concatName[40];
-bool isConcatState = 0; // 0:未使用, 1:オープンしている
+char isConcatState = 0; // 0:未使用, 1:オープンしている
 File concatFile;
 unsigned long concatPos = 0;
 unsigned long concatSize = 0;
 // D88
 char d88Name[40];
-bool isD88State = 0; // 0:未使用, 1:オープンしている
+char isD88State = 0; // 0:未使用, 1:オープンしている
 bool reverse = false;
 File d88File;
 int seekInfoPointer = 0;
@@ -1138,11 +1138,11 @@ void SendMidi(void)
   }
 }
 
-// D88関連
+// D88関連ファイル処理
 bool Open(const char* path)
 {
 	d88File = SD.open(path, O_READ | O_APPEND);
-	if(d88File == true)
+	if(d88File != true)
 	{
 		return false;
 	}
@@ -1170,6 +1170,7 @@ void Seek(int pos)
 	d88File.seek((unsigned long)pos);
 }
 
+// D88関連イメージ処理
 bool D88Open(const char* path, bool r)
 {
 	if(Open(path) == false)
@@ -1374,8 +1375,8 @@ void d88Close(void)
 // 0ECh
 void d88ReadLba(void)
 {
-  unsigned short lba = concatFile.read();
-  lba |= concatFile.read() * 256;
+  unsigned short lba = rcv1byte();
+  lba |= rcv1byte() * 256;
   if(isConcatState == 0)
   {
     snd1byte(0xFF);
@@ -1395,6 +1396,22 @@ void d88ReadLba(void)
 // 0EDh
 void d88WriteLba(void)
 {
+  unsigned short lba = rcv1byte();
+  lba |= rcv1byte() * 256;
+  if(isConcatState == 0)
+  {
+    snd1byte(0xFF);
+    return;
+  }
+  D88SeekLba((int)lba);
+  for(int i = 0; i < 256; ++ i)
+  {
+    unsigned char data = rcv1byte();
+    // todo セクタへの書き込み
+    D88Write(data);
+  }
+  // 書き込み終了
+  snd1byte(0x00);
 }
 
 // メインループ
@@ -1571,26 +1588,31 @@ void loop()
         d88FileList();
         break;
 
+// 0E9hでD88ファイルを読み込みモードでオープン
       case 0xE9:
         snd1byte(0x00);
         d88OpenRead();
         break;
 
+// 0EAhでD88ファイルを書き込みモードでオープン
       case 0xEA:
         snd1byte(0x00);
         d88OpenWrite();
         break;
 
+// 0EBhでD88ファイルを閉じる
       case 0xEB:
         snd1byte(0x00);
         d88Close();
         break;
 
+// 0EChでD88ファイルのセクタデータをLBA指定で読み込む
       case 0xEC:
         snd1byte(0x00);
         d88ReadLba();
         break;
 
+// 0EDhでD88ファイルのセクタデータをLBA指定で書き込む
       case 0xED:
         snd1byte(0x00);
         d88WriteLba();
