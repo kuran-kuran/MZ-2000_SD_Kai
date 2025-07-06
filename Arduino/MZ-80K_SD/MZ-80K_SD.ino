@@ -387,7 +387,12 @@ char w_name[]="0000.mzt";
 }
 
 // SD-CARDのFILELIST
-void dirlist(void){
+// type: type (0: mzt, 1:d88)
+void dirlist(char type){
+  const char* typeArray[2][2] = {
+    {"mzt", "MZT"},
+    {"d88", "D88"}
+  };
 //比較文字列取得 32+1文字まで
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
     c_name[lp1] = rcv1byte();
@@ -406,8 +411,8 @@ void dirlist(void){
       entry.getName(f_name,36);
       unsigned int lp1=0;
 //一件送信
-//比較文字列でファイルネームを先頭10文字まで比較して一致するものだけを出力
-      if (f_match(f_name,c_name)){
+//比較文字列でファイルネームを先頭10文字までと拡張子を比較して一致するものだけを出力
+      if (f_match(f_name,c_name) && (strstr(f_name, typeArray[type][0]) || strstr(f_name, typeArray[type][1]))){
         while (lp1<=36 && f_name[lp1]!=0x00){
         snd1byte(upper(f_name[lp1]));
         lp1++;
@@ -1002,6 +1007,7 @@ void ConcatFileSkip()
   {
     // オープンしていない
     snd1byte(0xFF);
+    sdinit();
     return;
   }
   // モード読み捨て
@@ -1032,6 +1038,7 @@ void ConcatFileFind()
 {
   if(isConcatState == 0) {
     snd1byte(0xFF);
+    sdinit();
     return;
   }
   unsigned long concatPosBackup = concatPos;
@@ -1086,6 +1093,7 @@ void ConcatFileTop()
 {
   if(isConcatState == 0) {
     snd1byte(0xFF);
+    sdinit();
     return;
   }
   concatPos = 0;
@@ -1100,6 +1108,7 @@ void ConcatFileClose()
 {
   if(isConcatState == 0) {
     snd1byte(0xFF);
+    sdinit();
     return;
   } else if(isConcatState == 1) {
     concatFile.close();
@@ -1116,6 +1125,7 @@ void ConcatFileState(void)
   if(isConcatState == 0) {
     // オープンしていない
     snd1byte(0xFF);
+    sdinit();
   } else if (concatPos < concatSize) {
     // 次のデータがある
     snd1byte(0xFE);
@@ -1298,12 +1308,6 @@ void D88Write(unsigned char data)
 	++ seekDataOffset;
 }
 
-// D88ファイル一覧
-// 0E8h
-void d88FileList(void)
-{
-}
-
 // D88読み込みOpen
 // 0E9h
 void d88OpenRead(void)
@@ -1465,7 +1469,7 @@ void loop()
 //状態コード送信(OK)
         snd1byte(0x00);
         sdinit();
-        dirlist();
+        dirlist(0);
         break;
 //84hでファイルDelete
       case 0x84:
@@ -1585,7 +1589,7 @@ void loop()
 // 0E8hでD88ファイル一覧
       case 0xE8:
         snd1byte(0x00);
-        d88FileList();
+        dirlist(1);
         break;
 
 // 0E9hでD88ファイルを読み込みモードでオープン
