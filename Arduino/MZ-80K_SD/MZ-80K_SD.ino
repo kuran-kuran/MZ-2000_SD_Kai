@@ -195,6 +195,25 @@ void addmzt(char *f_name){
   f_name[lp1] = 0x00;
 }
 
+//ファイル名の最後が「.d88」でなければ付加
+void addD88(char *f_name){
+  unsigned int lp1=0;
+  while (f_name[lp1] != 0x0D){
+    lp1++;
+  }
+  if (f_name[lp1-4]!='.' ||
+    ( f_name[lp1-3]!='D' &&
+      f_name[lp1-3]!='d' ) ||
+    ( f_name[lp1-2]!='8' ) ||
+    ( f_name[lp1-1]!='8' ) ){
+         f_name[lp1++] = '.';
+         f_name[lp1++] = 'd';
+         f_name[lp1++] = '8';
+         f_name[lp1++] = '8';
+  }
+  f_name[lp1] = 0x00;
+}
+
 //SDカードにSAVE
 void f_save(void){
 char p_name[20];
@@ -389,9 +408,9 @@ char w_name[]="0000.mzt";
 // SD-CARDのFILELIST
 // type: type (0: mzt, 1:d88)
 void dirlist(char type){
-  const char* typeArray[2][2] = {
-    {"mzt", "MZT"},
-    {"d88", "D88"}
+  static const char* typeArray[2] = {
+    "mzt",
+    "d88"
   };
 //比較文字列取得 32+1文字まで
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
@@ -408,11 +427,13 @@ void dirlist(char type){
 //全件出力の場合には20件出力したところで一時停止、キー入力により継続、打ち切りを選択
   while (br_chk == 0) {
     if(entry){
-      entry.getName(f_name,36);
+//    entry.getName(f_name,36);
+      entry.getName(s_data, 260);
+      memcpy(f_name, s_data, 36);
       unsigned int lp1=0;
 //一件送信
 //比較文字列でファイルネームを先頭10文字までと拡張子を比較して一致するものだけを出力
-      if (f_match(f_name,c_name) && (strstr(f_name, typeArray[type][0]) || strstr(f_name, typeArray[type][1]))){
+      if (f_match(f_name,c_name) && (strcasestr(s_data, typeArray[type]))){
         while (lp1<=36 && f_name[lp1]!=0x00){
         snd1byte(upper(f_name[lp1]));
         lp1++;
@@ -1317,7 +1338,7 @@ void d88OpenRead(void)
   {
     d88Name[lp1] = rcv1byte();
   }
-  addmzt(d88Name);
+  addD88(d88Name);
   //ファイルオープン
   if(D88Open(d88Name, true) == true)
   {
@@ -1342,7 +1363,7 @@ void d88OpenWrite(void)
   {
     d88Name[lp1] = rcv1byte();
   }
-  addmzt(d88Name);
+  addD88(d88Name);
   //ファイルオープン
   if(D88Open(d88Name, true) == true)
   {
