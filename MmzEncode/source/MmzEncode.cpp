@@ -21,6 +21,8 @@ static const unsigned int OPTION_80B     = 0x00000002;
 static const unsigned int OPTION_ADD     = 0x00000004;
 static const unsigned int OPTION_8x4     = 0x00000008;
 static const unsigned int OPTION_COLOR1  = 0x00000010;
+static const unsigned int OPTION_PCG700  = 0x00000020;
+static const unsigned int OPTION_1500    = 0x00000040;
 
 int main(int argc, char* argv[])
 {
@@ -67,6 +69,16 @@ int main(int argc, char* argv[])
 						{
 							option |= OPTION_COLOR1;
 						}
+						else if (_strnicmp(&argv[i][1], "PCG700", 6) == 0)
+						{
+							option |= OPTION_PCG700;
+							width = 320;
+						}
+						else if (_strnicmp(&argv[i][1], "1500", 4) == 0)
+						{
+							option |= OPTION_1500;
+							width = 320;
+						}
 					}
 					else
 					{
@@ -98,6 +110,13 @@ int main(int argc, char* argv[])
 			std::cout << "Usage : " << NAME << " [option] <input png1 filename> [input png2 filename] <output mzt filename>" << std::endl;
 			std::cout << std::endl;
 			std::cout << "Option : /HELP            Display help message." << std::endl;
+			std::cout << "         /80B             MZ-80B用のデータを作成します" << std::endl;
+			std::cout << "         /ADD             画像を比較してデータを作成します" << std::endl;
+			std::cout << "         /8x4             タイルの大きさを8x4にします(未検証)" << std::endl;
+			std::cout << "         /COLOR1          モノクロデータを作成します" << std::endl;
+			//			std::cout << "         /PCG700          PCG-700用のデータを作成します" << std::endl;
+			//			std::cout << "         /1500            MZ-1500用のデータを作成します" << std::endl;
+			//			std::cout << "         /32x8            タイルの大きさを32x8にします" << std::endl;
 			std::cout << std::endl;
 			return -1;
 		}
@@ -213,9 +232,9 @@ int main(int argc, char* argv[])
 		}
 		mzImage.SetImage(&sourcePng);
 		std::vector<std::vector<unsigned char>> mmzImageList = mzImage.GetEncodeData();
-		if(mmzImageList.size() == 1)
+		if (mmzImageList.size() == 1)
 		{
-			if(mmzImageList[0].size() == 1)
+			if (mmzImageList[0].size() == 1)
 			{
 				// 違いが無いので追加しない
 				std::cout << "AddFile: " << path2 << ", AddSize: " << 0 << " byte" << std::endl;
@@ -224,7 +243,7 @@ int main(int argc, char* argv[])
 		}
 		unsigned char signature = 'A';
 		size_t addSize = 0;
-		for(std::vector<unsigned char> mmzImage: mmzImageList)
+		for (std::vector<unsigned char> mmzImage : mmzImageList)
 		{
 			size_t lzeBufferSize = 8192;
 			std::vector<unsigned char> lzeBuffer(lzeBufferSize, 0);
@@ -253,19 +272,19 @@ int main(int argc, char* argv[])
 #endif
 			std::vector<unsigned char> MztHeader(128, 0);
 			MztHeader[0x0000] = 1; // Binary
-			for(int i = 0; i < 17; ++ i)
+			for (int i = 0; i < 17; ++i)
 			{
 				MztHeader[0x0001 + i] = 0x0D;
 			}
 			std::string filename = PathFindFileNameA(path2.c_str());
-			for(int i = 0; i < 16; ++ i)
+			for (int i = 0; i < 16; ++i)
 			{
-				if(filename[i] == 0)
+				if (filename[i] == 0)
 				{
 					MztHeader[0x0001 + i] = signature;
 					break;
 				}
-				if(filename[i] == '.')
+				if (filename[i] == '.')
 				{
 					MztHeader[0x0001 + i] = signature;
 					break;
@@ -286,8 +305,24 @@ int main(int argc, char* argv[])
 				MztHeader[0x0015] = 0xC0;
 			}
 			// ExecuteAddress
-			MztHeader[0x0016] = 0xB1;
-			MztHeader[0x0017] = 0;
+			if (option & OPTION_PCG700)
+			{
+				// MZ-700
+				MztHeader[0x0016] = 0x00;
+				MztHeader[0x0017] = 0x12;
+			}
+			else if (option & OPTION_1500)
+			{
+				// MZ-1500
+				MztHeader[0x0016] = 0xA7;
+				MztHeader[0x0017] = 0xEA;
+			}
+			else
+			{
+				// MZ-80B/2000/2200
+				MztHeader[0x0016] = 0xB1;
+				MztHeader[0x0017] = 0x00;
+			}
 			// Save
 			FileData mztFile;
 			mztFile.SetBuffer(&MztHeader[0], 128);
@@ -308,7 +343,7 @@ int main(int argc, char* argv[])
 				file.SaveAdd(debugFilename);
 			}
 #endif
-			++ signature;
+			++signature;
 		}
 		std::cout << "AddFile: " << path2 << ", AddSize: " << addSize << " bytes" << std::endl;
 	}

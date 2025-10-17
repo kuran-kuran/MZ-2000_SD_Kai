@@ -18,6 +18,7 @@ public:
 		MODE_16x8 = 0,
 		MODE_8x8,
 		MODE_8x4,
+		MODE_32x8,
 		COLOR_1 = 0,
 		COLOR_8,
 	};
