@@ -681,13 +681,17 @@ unsigned int br_chk =0;
 }
 
 //FILE COPY
-void f_copy(void){
+void f_copy(char type){
 
 //現ファイルネーム取得
   for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
     f_name[lp1] = rcv1byte();
   }
-  addmzt(f_name);
+  if (type == 0) {
+    addmzt(f_name);
+  } else {
+    addD88(f_name);
+  }
 //ファイルが存在しなければERROR
   if (SD.exists(f_name) == true){
 //状態コード送信(OK)
@@ -697,7 +701,11 @@ void f_copy(void){
     for (unsigned int lp1 = 0;lp1 <= 32;lp1++){
       new_name[lp1] = rcv1byte();
     }
-    addmzt(new_name);
+    if (type == 0) {
+      addmzt(new_name);
+    } else {
+      addD88(new_name);
+    }
 //新ファイルネームと同じファイルネームが存在すればERROR
     if (SD.exists(new_name) == false){
 //状態コード送信(OK)
@@ -1518,7 +1526,7 @@ void loop()
 ////  Serial.println("FILE Copy START");
 //状態コード送信(OK)
         snd1byte(0x00);
-        f_copy();
+        f_copy(0);
         break;
       case 0x91:
 //91hで0436H MONITOR ライト インフォメーション代替処理
@@ -1641,6 +1649,12 @@ void loop()
       case 0xED:
         snd1byte(0x00);
         d88WriteLba();
+        break;
+
+// 0EEhでD88ファイルファイルコピー
+      case 0xEE:
+        snd1byte(0x00);
+        f_copy(1);
         break;
 
       default:
