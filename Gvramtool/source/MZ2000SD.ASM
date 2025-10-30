@@ -318,7 +318,7 @@ SND4BIT:
 	RET
 
 ;**** BUSY‚ðCHECK(1) ****
-; 82H BIT7‚ª1‚É‚È‚é‚Ü‚ÅLOP
+; 82H BIT7‚ª1‚É‚È‚é‚Ü‚ÅLOOP getChk(1)
 F1CHK:
 	IN	A, (0A2h)
 	AND	80h ; PORTC BIT7 = 1?
@@ -326,7 +326,7 @@ F1CHK:
 	RET
 
 ;**** BUSY‚ðCHECK(0) ****
-; 82H BIT7‚ª0‚É‚È‚é‚Ü‚ÅLOOP
+; 82H BIT7‚ª0‚É‚È‚é‚Ü‚ÅLOOP getChk(0)
 F2CHK:
 	IN	A, (0A2h)
 	AND	80h ; PORTC BIT7 = 0?
