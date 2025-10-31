@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
 			MztHeader[0x0014] = 0x00;
 			if (option & OPTION_80B)
 			{
-				MztHeader[0x0015] = 0xDF;
+				MztHeader[0x0015] = 0xCF;
 			}
 			else
 			{
