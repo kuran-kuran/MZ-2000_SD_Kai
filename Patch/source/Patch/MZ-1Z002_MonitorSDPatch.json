@@ -1,0 +1,24 @@
+{
+	"Title": "MZ-2000 COLOR BASIC MZ-1Z002",
+	"Original": "MZ-1Z002",
+	"Create": "MZ-1Z002",
+	"Support": "mz2000_sd",
+	"NameAdd": "(M-SD)",
+	"Patch":
+	[
+		{"Address": "025C", "Before": ["C4,F6,01,20,EE"], "After": "00,00,00,00,00"},
+		{"Address": "0468", "Before": ["9A,40"], "After": "20,41"}
+	],
+	"PatchFile":
+	[
+		{
+			"File": "MonitorSDPatch\MonitorSDPatch.bin",
+			"Address": "02D1"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "5E22"
+	}
+}

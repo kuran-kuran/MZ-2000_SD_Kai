@@ -7,7 +7,7 @@
 #pragma comment(lib, "urlmon.lib")
 
 static const char* const NAME = "パッチ当てプログラム";
-static const char* const VERSION = "1.0.0";
+static const char* const VERSION = "1.0.1";
 static const char* const FILENAME = "Patch";
 static const unsigned int OPTION_HELP  = 0x00000001;
 static const unsigned int OPTION_FORCE = 0x00000002;
@@ -141,6 +141,44 @@ int main(int argc, char* argv[])
 		unsigned char* mztFileBuffer = reinterpret_cast<unsigned char*>(mztFile.GetBuffer());
 		std::vector<unsigned char> mztBuffer;
 		std::copy(mztFileBuffer, mztFileBuffer + mztFile.GetBufferSize(), std::back_inserter(mztBuffer));
+		// PatchFile
+		if (patchFileText.size() > 0)
+		{
+			Json patchFileJson(patchFileText);
+			for (size_t i = 0; i < patchFileJson.Count(); ++ i)
+			{
+//				std::cout << patchFileJson[i] << std::endl;
+				Json patchFileData(patchFileJson[i]);
+				// ダウンロード
+				std::string url = patchFileData["Url"];
+				std::string file = Json::DecodeEscape(patchFileData["File"]);
+				if ((url != "") && (file != ""))
+				{
+					URLDownloadToFileA(NULL, url.c_str(), file.c_str(), 0, NULL);
+					std::cout << patchFileData["File"] << "をダウンロードしました。" << std::endl;
+				}
+				// ファイルパッチ
+				if (patchFileData["File"] != "")
+				{
+					FileData patchFile;
+					bool result = patchFile.Load(patchFileData["File"]);
+					if (result == false)
+					{
+						throw Format("Abort: %sがみつかりません。", patchFileData["File"].c_str());
+					}
+					size_t orgSize = mztBuffer.size();
+					size_t address = strtol(patchFileData["Address"].c_str(), NULL, 16);
+					size_t fileSize = patchFile.GetBufferSize();
+					size_t bufferSize = address + fileSize;
+					size_t resize = orgSize;
+					if(bufferSize > orgSize)
+					{
+						mztBuffer.resize(bufferSize, 0);
+					}
+					memcpy(&mztBuffer[address], patchFile.GetBuffer(), fileSize);
+				}
+			}
+		}
 		// Patch
 		if (patchText.size() > 0)
 		{
@@ -182,39 +220,6 @@ int main(int argc, char* argv[])
 						throw Format("Abort: 元データの%Xh(%u)バイト目が想定と違っています。", address + j, address + j);
 					}
 					mztBuffer[address + j] = patchData;
-				}
-			}
-		}
-		// PatchFile
-		if (patchFileText.size() > 0)
-		{
-			Json patchFileJson(patchFileText);
-			for (size_t i = 0; i < patchFileJson.Count(); ++ i)
-			{
-//				std::cout << patchFileJson[i] << std::endl;
-				Json patchFileData(patchFileJson[i]);
-				// ダウンロード
-				std::string url = patchFileData["Url"];
-				std::string file = patchFileData["File"];
-				if ((url != "") && (file != ""))
-				{
-					URLDownloadToFileA(NULL, url.c_str(), file.c_str(), 0, NULL);
-					std::cout << patchFileData["File"] << "をダウンロードしました。" << std::endl;
-				}
-				// ファイルパッチ
-				if (patchFileData["File"] != "")
-				{
-					FileData patchFile;
-					bool result = patchFile.Load(patchFileData["File"]);
-					if (result == false)
-					{
-						throw Format("Abort: %sがみつかりません。", patchFileData["File"].c_str());
-					}
-					size_t address = strtol(patchFileData["Address"].c_str(), NULL, 16);
-					size_t fileSize = patchFile.GetBufferSize();
-					size_t bufferSize = address + fileSize;
-					mztBuffer.resize(bufferSize, 0);
-					memcpy(&mztBuffer[address], patchFile.GetBuffer(), fileSize);
 				}
 			}
 		}

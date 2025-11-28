@@ -4,9 +4,21 @@ using System.Diagnostics;
 using System.Windows;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace PatchGUI
 {
+    /// <summary>
+    /// Json
+    /// </summary>
+    public class Setting
+    {
+        public string Title { get; set; }
+        public string Original { get; set; }
+        public string Create { get; set; }
+        public string NameAdd { get; set; }
+    }
+
     /// <summary>
     /// MainWindow.xaml の相互作用ロジック
     /// </summary>
@@ -55,8 +67,15 @@ namespace PatchGUI
                 }
                 else
                 {
+                    string json = File.ReadAllText(jsonFile.Text);
+                    Setting setting = JsonConvert.DeserializeObject<Setting>(json);
+                    var nameAdd = "(SD)";
+                    if(setting.NameAdd != null)
+                    {
+                        nameAdd = setting.NameAdd;
+                    }
                     var output = dlg.FileName;
-                    var sdOutput = Regex.Replace(output, ".mzt", "(SD).mzt", RegexOptions.IgnoreCase);
+                    var sdOutput = Regex.Replace(output, ".mzt", $"{nameAdd}.mzt", RegexOptions.IgnoreCase);
                     outputFile.Text = sdOutput;
                 }
             }
