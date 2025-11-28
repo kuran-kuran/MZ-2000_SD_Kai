@@ -7,7 +7,7 @@
 #pragma comment(lib, "urlmon.lib")
 
 static const char* const NAME = "パッチ当てプログラム";
-static const char* const VERSION = "1.0.1";
+static const char* const VERSION = "1.0.7";
 static const char* const FILENAME = "Patch";
 static const unsigned int OPTION_HELP  = 0x00000001;
 static const unsigned int OPTION_FORCE = 0x00000002;

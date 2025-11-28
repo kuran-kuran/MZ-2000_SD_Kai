@@ -9,7 +9,7 @@
 	"PatchFile":
 	[
 		{
-			"File": "BasicMinSDPatch\SB-5520MINSDPATCH.bin",
+			"File": "BasicMinSDPatch\\SB-5520MINSDPATCH.bin",
 			"Address": "49EE"
 		}
 	],

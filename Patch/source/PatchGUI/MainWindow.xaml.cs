@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Windows;
+using System.Reflection;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -24,6 +25,9 @@ namespace PatchGUI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private string jsonDirectory = string.Empty;
+        private string mztDirectory = string.Empty;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -33,13 +37,29 @@ namespace PatchGUI
         {
             var dlg = new CommonOpenFileDialog();
             dlg.Filters.Add(new CommonFileDialogFilter("json", "*.json"));
-            dlg.InitialDirectory  = Directory.GetCurrentDirectory();
+            dlg.InitialDirectory = jsonDirectory == string.Empty ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : jsonDirectory;
             dlg.Multiselect = false;
-            dlg.InitialDirectory = "";
             var result = dlg.ShowDialog();
             if(result == CommonFileDialogResult.Ok)
             {
                 jsonFile.Text = dlg.FileName;
+                if (jsonFile.Text != string.Empty)
+                {
+                    jsonDirectory = Path.GetDirectoryName(jsonFile.Text);
+                }
+                if ((jsonFile.Text != string.Empty) && (mztFile.Text != string.Empty))
+                {
+                    string json = File.ReadAllText(jsonFile.Text);
+                    Setting setting = JsonConvert.DeserializeObject<Setting>(json);
+                    var nameAdd = "(SD)";
+                    if (setting.NameAdd != null)
+                    {
+                        nameAdd = setting.NameAdd;
+                    }
+                    var output = mztFile.Text;
+                    var sdOutput = Regex.Replace(output, ".mzt", $"{nameAdd}.mzt", RegexOptions.IgnoreCase);
+                    outputFile.Text = sdOutput;
+                }
             }
         }
 
@@ -47,7 +67,7 @@ namespace PatchGUI
         {
             var dlg = new CommonOpenFileDialog();
             dlg.Filters.Add(new CommonFileDialogFilter("mzt", "*.mzt"));
-            dlg.InitialDirectory  = Directory.GetCurrentDirectory();
+            dlg.InitialDirectory = mztDirectory == string.Empty ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) : mztDirectory;
             dlg.Multiselect = false;
             var result = dlg.ShowDialog();
             if(result == CommonFileDialogResult.Ok)
@@ -55,6 +75,7 @@ namespace PatchGUI
                 mztFile.Text = dlg.FileName;
                 var jsonFileName = Path.GetFileName(jsonFile.Text);
                 var fileDirectry = Path.GetDirectoryName(mztFile.Text);
+                mztDirectory = fileDirectry;
                 if (jsonFileName == "mz-1z001m.json")
                 {
                     var output = fileDirectry + "\\@BOOT-A MZ-2000.bin";
@@ -67,16 +88,19 @@ namespace PatchGUI
                 }
                 else
                 {
-                    string json = File.ReadAllText(jsonFile.Text);
-                    Setting setting = JsonConvert.DeserializeObject<Setting>(json);
-                    var nameAdd = "(SD)";
-                    if(setting.NameAdd != null)
+                    if(jsonFile.Text != string.Empty)
                     {
-                        nameAdd = setting.NameAdd;
+                        string json = File.ReadAllText(jsonFile.Text);
+                        Setting setting = JsonConvert.DeserializeObject<Setting>(json);
+                        var nameAdd = "(SD)";
+                        if(setting.NameAdd != null)
+                        {
+                            nameAdd = setting.NameAdd;
+                        }
+                        var output = dlg.FileName;
+                        var sdOutput = Regex.Replace(output, ".mzt", $"{nameAdd}.mzt", RegexOptions.IgnoreCase);
+                        outputFile.Text = sdOutput;
                     }
-                    var output = dlg.FileName;
-                    var sdOutput = Regex.Replace(output, ".mzt", $"{nameAdd}.mzt", RegexOptions.IgnoreCase);
-                    outputFile.Text = sdOutput;
                 }
             }
         }
@@ -86,7 +110,7 @@ namespace PatchGUI
             var dlg = new CommonSaveFileDialog();
             dlg.Filters.Add(new CommonFileDialogFilter("mzt", "*.mzt"));
             dlg.Filters.Add(new CommonFileDialogFilter("bin", "*.bin"));
-            dlg.InitialDirectory  = Directory.GetCurrentDirectory();
+            dlg.InitialDirectory  = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             dlg.DefaultFileName = outputFile.Text;
             var result = dlg.ShowDialog();
             if(result == CommonFileDialogResult.Ok)

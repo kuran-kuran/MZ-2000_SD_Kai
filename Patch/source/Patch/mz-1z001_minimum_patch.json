@@ -10,7 +10,7 @@
 	"PatchFile":
 	[
 		{
-			"File": "BasicMinSDPatch\MZ-1Z001MINSDPATCH.bin",
+			"File": "BasicMinSDPatch\\MZ-1Z001MINSDPATCH.bin",
 			"Address": "4C62"
 		}
 	],
