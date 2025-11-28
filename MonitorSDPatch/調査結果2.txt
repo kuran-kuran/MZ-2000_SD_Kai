@@ -1,0 +1,36 @@
+LOAD
+3DB2
+3DD3 1:OBJ なら 3E4F
+     2:BTX なら 3D9E
+3DDC BRD
+
+3E4F HL: $F280
+     DE: $F280
+3E53 HL: LIMIT$F000
+     HL: $EFFF
+3E57 CALL 187F キャリーが返ってくる HLとDEの比較?
+
+
+
+	LD	A, H
+	SUB	D
+	RET	NZ
+	LD	A, L
+	SUB	E
+	RET
+
+e 8000 21 0a 00 11 05 00 cd 7f 18 76
+
+HL: EFFF
+DE: F280
+
+HL: 10, DE:  5 Result F: = [-N------] HL > DE
+HL: 10, DE: 10 Result F: = [-N----Z-] HL = DE
+HL:  5, DE: 10 Result F: = [CN-XHY-S] HL < DE
+
+BASICから使われているAPI
+048C *OPEN
+04B1 *SERSP
+04CE *MSTOP
+04DA *BLK3
+0511 *DEL6
