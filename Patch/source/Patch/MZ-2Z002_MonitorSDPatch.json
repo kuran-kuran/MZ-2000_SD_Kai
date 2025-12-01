@@ -1,7 +1,7 @@
 {
-	"Title": "MZ-2000 Disk Color BASIC MZ-2Z001",
-	"Original": "MZ-2Z001",
-	"Create": "MZ-2Z001",
+	"Title": "MZ-2000 Color Disk BASIC MZ-2Z002",
+	"Original": "MZ-2Z002",
+	"Create": "MZ-2Z002",
 	"Support": "mz2000_sd",
 	"NameAdd": "(M-SD)",
 	"Patch":
