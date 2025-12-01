@@ -1,0 +1,24 @@
+{
+	"Title": "MZ-80B Disk BASIC SB-6520",
+	"Original": "SB-6520",
+	"Create": "SB-6520",
+	"Support": "mz2000_sd",
+	"NameAdd": "(M-SD)",
+	"Patch":
+	[
+		{"Address": "025C", "Before": ["C4,F6,01,20,EE"], "After": "00,00,00,00,00"},
+		{"Address": "0468", "Before": ["9A,40"], "After": "FB,4D"}
+	],
+	"PatchFile":
+	[
+		{
+			"File": "MonitorSDPatch\\MonitorSDPatch.bin",
+			"Address": "02D1"
+		}
+	],
+	"SaveFile":
+	{
+		"Start": "0000",
+		"Size": "7E80"
+	}
+}
