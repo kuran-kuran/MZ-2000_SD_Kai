@@ -1,0 +1,71 @@
+コマンド
+01-07, xx : プレーン, 個数
+00,08-09  : Reserve
+0Ah       : 中断
+0Bh       : 終了
+C000-FFFF : GVRAM Position
+
+例)
+C000h, 07h, 40, 16x3x40
+C280h, 07h, 40, 16x3x40
+C500h, 07h, 2, 16x3x2,
+00, 07h, 2, 16x3x2,
+
+;16x8単色を転送する
+;DE: POSITION(2の倍数)
+;HL: PATTERN
+;破壊 BC, HL
+;	LD	DE, POSITION
+;	LD	HL, PATTERN
+PUT16x8:
+	PUSH	DE
+	LD	(PUT16x8_RESTORE_STACK + 1), SP
+	LD	SP, HL
+	EX	DE, HL
+	LD	BC, 78
+	REPT 7
+	POP	DE
+	LD	(HL), E
+	INC	L	; INC	HL (POSITIONが2の倍数の時のみ)
+	LD	(HL), D
+	INC	HL
+	ADD	HL, BC
+	ENDM
+	POP	DE
+	LD	(HL), E
+	INC	L	; INC	HL (POSITIONが2の倍数の時のみ)
+	LD	(HL), D
+PUT16x8_RESTORE_STACK:
+	LD	SP, 0000
+	POP	DE
+	RET
+
+クロック計算
+;16x8単色を転送する
+;DE: POSITION(2の倍数)
+;HL: PATTERN
+;破壊 BC, HL
+;	LD	DE, POSITION
+;	LD	HL, PATTERN
+PUT16x8:
+	PUSH	DE							11
+	LD	(PUT16x8_RESTORE_STACK + 1), SP				20
+	LD	SP, HL							6
+	EX	DE, HL							4
+	LD	BC, 78							10	51
+	REPT 7
+	POP	DE							10
+	LD	(HL), E							7
+	INC	L	; INC	HL (POSITIONが2の倍数の時のみ)		4
+	LD	(HL), D							7
+	INC	HL							6
+	ADD	HL, BC							11	45x7=315
+	ENDM
+	POP	DE							10
+	LD	(HL), E							7
+	INC	L	; INC	HL (POSITIONが2の倍数の時のみ)		4
+	LD	(HL), D							7	28
+PUT16x8_RESTORE_STACK:
+	LD	SP, 0000						10
+	POP	DE							10
+	RET								10	30

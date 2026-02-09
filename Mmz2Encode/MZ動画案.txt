@@ -1,0 +1,60 @@
+■MZ-80B/2000/2200コマンド
+01-07, xx : プレーン, 個数
+00,08-09  : Reserved
+0Ah       : 中断 (8KBを超えそうなら中断する)
+0Bh       : 画像終了 (データ1枚分終了)
+0Ch       : 最終画像終了 (全データ終了)
+
+■アドレス
+MZ-2000/2200
+C000-FFFF : GVRAM Address
+MZ-80B
+E000-FFFF : GVRAM Address
+
+■タイル
+MZ-2000/2200
+32x4 (横20個)
+MZ-80B (横10個)
+32x4
+
+例)
+C000h, 07h, 40, 16x3x40
+C280h, 07h, 40, 16x3x40
+C500h, 07h, 2, 16x3x2,
+00, 07h, 2, 16x3x2,
+
+■MZ-700コマンド
+01       : PCG定義
+02       : 描画
+00,03-09 : Reserved
+0Ah      : 中断 (8KBを超えそうなら中断する)
+0Bh      : 画像終了 (データ1枚分終了)
+0Ch      : 最終画像終了 (全データ終了)
+
+PCG定義
+PCGAddress xxxx
+Command 01
+Count yy
+Data yy * 8 bytes
+
+描画
+VRAM Address xxxx
+Command 02
+Count yy
+Text yy bytes
+Attribute yy bytes
+
+■アドレス
+MZ-700PCG
+D000-D3FF : Text Addtree
+D800-DBFF : Attribute Address
+0000-07FF : PCG Address
+
+■タイル
+MZ-700PCG
+8x8
+
+
+
+
+
