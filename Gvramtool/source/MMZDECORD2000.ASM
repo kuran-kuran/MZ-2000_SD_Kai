@@ -20,6 +20,23 @@ DRAW_MMZ_FILE:
 	CALL	SD_USR_LOAD
 	JR	DRAW_MMZ2
 
+EMM_DRAW_MMZ:
+EMM_DRAW_MMZ1:
+	; データロード
+	CALL	EMM_READ_CONCAT_1BLOCK
+	; データ展開
+EMM_DRAW_MMZ2:
+	LD	HL, 0C000h + 4
+	LD	DE, 09800h
+	CALL	DECODE_LZE
+	; MMZデコード
+	LD	HL, 09800h
+	CALL	DECORD_MMZ
+	CP	0Ah
+	JR	Z, DRAW_MMZ1
+	; 0Ah以外 (0Bh終了)
+	RET
+
 ;Mmzをデコードして画面に描画する
 ;HL: Mmzデータ
 ;Result

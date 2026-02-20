@@ -1,9 +1,9 @@
 EMM_PORT_BASE	EQU	0A8h
 
-; BASICã‹ã‚‰ã®EMMèª­ã¿è¾¼ã¿
+; BASIC‚©‚ç‚ÌEMM“Ç‚Ýž‚Ý
 ; USR($xxxx, F$)
-; DE: æ–‡å­—åˆ—ã®ã‚¢ãƒ‰ãƒ¬ã‚¹
-; BC: æ–‡å­—åˆ—ã®é•·ã•
+; DE: •¶Žš—ñ‚ÌƒAƒhƒŒƒX
+; BC: •¶Žš—ñ‚Ì’·‚³
 EMM_USR_OPEN_CONCAT:
 	CALL	EMM_OPEN_CONCAT
 	RET
@@ -20,12 +20,12 @@ EMM_USR_FIND_CONCAT_1BLOCK:
 
 EMM_USR_NEXT_FILE_EXIST:
 	CALL	EMM_NEXT_FILE_EXIST
-	; æ–‡å­—åˆ—ã®1ãƒã‚¤ãƒˆç›®ã«ãƒ¬ã‚¹ãƒãƒ³ã‚¹ã‚’è¿”ã™
+	; •¶Žš—ñ‚Ì1ƒoƒCƒg–Ú‚ÉƒŒƒXƒ|ƒ“ƒX‚ð•Ô‚·
 	LD	(DE), A
 	RET
 
-; EMMæ“ä½œ
-; ç ´å£Š A
+; EMM‘€ì
+; ”j‰ó A
 EMM_TOP_CONCAT:
 EMM_OPEN_CONCAT:
 	XOR	A
@@ -35,7 +35,7 @@ EMM_OPEN_CONCAT:
 	LD	(MZT_HEADER_VALID), A
 	RET
 
-; ç ´å£Š A, BC, HL
+; ”j‰ó A, BC, HL
 EMM_READ_CONCAT_1BLOCK:
 	LD	A, (MZT_HEADER_VALID)
 	OR	A
@@ -47,14 +47,14 @@ EMM_READ_CONCAT_1BLOCK:
 	LD	(MZT_HEADER_VALID), A
 	RET
 
-; ç ´å£Š A, BC, HL
+; ”j‰ó A, BC, HL
 EMM_SKIP_CONCAT_1BLOCK:
 	LD	A, (MZT_HEADER_VALID)
 	OR	A
 	JR	NZ, @f
 	CALL	EMM_READ_HEADER
 @@:
-	; ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿æ¨ã¦ã‚‹
+	; ƒtƒ@ƒCƒ‹‚ð“Ç‚ÝŽÌ‚Ä‚é
 	LD	BC, (MZT_SIZE)
 @@:
 	IN	A, (EMM_PORT_BASE + 3)
@@ -66,11 +66,11 @@ EMM_SKIP_CONCAT_1BLOCK:
 	LD	(MZT_HEADER_VALID), A
 	RET
 
-; 0Dhã§çµ‚ã‚ã£ã¦ã„ã‚‹æ–‡å­—åˆ—ã‚’æ¯”è¼ƒã™ã‚‹
-; LD	DE, æ¯”è¼ƒæ–‡å­—åˆ—1, 0Dh
-; LD	HL, æ¯”è¼ƒæ–‡å­—åˆ—2, 0Dh
-; Result Cyãƒ•ãƒ©ã‚° (0: é•ã†, 1: åŒã˜)
-; ç ´å£Š A, DE, HL
+; 0Dh‚ÅI‚í‚Á‚Ä‚¢‚é•¶Žš—ñ‚ð”äŠr‚·‚é
+; LD	DE, ”äŠr•¶Žš—ñ1, 0Dh
+; LD	HL, ”äŠr•¶Žš—ñ2, 0Dh
+; Result Cyƒtƒ‰ƒO (0: ˆá‚¤, 1: “¯‚¶)
+; ”j‰ó A, DE, HL
 CMP_TEXT:
 CMP_TEXT_1:
 	LD	A, (DE)
@@ -87,7 +87,7 @@ CMP_TEXT_2:
 	RET
 
 ; HL: Filename
-; ç ´å£Š A, BC, DE
+; ”j‰ó A, BC, DE
 EMM_FIND_CONCAT_1BLOCK:
 	PUSH	HL
 	LD	A, (MZT_HEADER_VALID)
@@ -96,13 +96,13 @@ EMM_FIND_CONCAT_1BLOCK:
 	CALL	EMM_READ_HEADER
 @@:
 	POP	HL
-	; ãƒ•ã‚¡ã‚¤ãƒ«åãŒä¸€ç·’ã‹?
+	; ƒtƒ@ƒCƒ‹–¼‚ªˆê‚©?
 	LD	DE, MZT_FILENAME
 	PUSH	HL
 	CALL	CMP_TEXT
 	POP	HL
-	JR	C, EMM_FIND_CONCAT_1BLOCK_SAME_NAME ; ãƒ•ã‚¡ã‚¤ãƒ«åãŒä¸€ç·’
-	; ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿æ¨ã¦ã‚‹
+	JR	C, EMM_FIND_CONCAT_1BLOCK_SAME_NAME ; ƒtƒ@ƒCƒ‹–¼‚ªˆê
+	; ƒtƒ@ƒCƒ‹‚ð“Ç‚ÝŽÌ‚Ä‚é
 	LD	BC, (MZT_SIZE)
 @@:
 	IN	A, (EMM_PORT_BASE + 3)
@@ -118,9 +118,9 @@ EMM_FIND_CONCAT_1BLOCK_SAME_NAME:
 	LD	(MZT_HEADER_VALID), A
 	RET
 
-; æ–‡å­—åˆ—ã®1ãƒã‚¤ãƒˆç›®ã«ãƒ¬ã‚¹ãƒãƒ³ã‚¹ã‚’è¿”ã™
-; Result A: 0xFE:æ¬¡ã®ãƒ‡ãƒ¼ã‚¿ãŒã‚ã‚‹, 0x00:æ¬¡ã®ãƒ‡ãƒ¼ã‚¿ãŒç„¡ã„(çµ‚äº†)
-; ç ´å£Š B, HL
+; •¶Žš—ñ‚Ì1ƒoƒCƒg–Ú‚ÉƒŒƒXƒ|ƒ“ƒX‚ð•Ô‚·
+; Result A: 0xFE:ŽŸ‚Ìƒf[ƒ^‚ª‚ ‚é, 0x00:ŽŸ‚Ìƒf[ƒ^‚ª–³‚¢(I—¹)
+; ”j‰ó B, HL
 EMM_NEXT_FILE_EXIST:
 	LD	A, (MZT_HEADER_VALID)
 	OR	A
@@ -136,7 +136,7 @@ EMM_NEXT_FILE_EXIST:
 @@:
 	RET
 
-; ç ´å£Š A, B, HL
+; ”j‰ó A, B, HL
 EMM_READ_HEADER:
 	LD	HL, MZT_HEADER
 	LD	B, 128
@@ -148,9 +148,10 @@ EMM_READ_HEADER:
 	RET
 
 ; HL: Read buffer
-; ç ´å£Š A, BC, HL
+; ”j‰ó A, BC, HL
 EMM_READ_DATA:
 	LD	BC, (MZT_SIZE)
+	LD	HL, (MZT_ADDRESS)
 @@:
 	IN	A, (EMM_PORT_BASE + 3)
 	LD	(HL), A
