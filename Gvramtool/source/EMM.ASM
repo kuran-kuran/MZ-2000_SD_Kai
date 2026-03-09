@@ -1,4 +1,4 @@
-EMM_PORT_BASE	EQU	0A8h
+EMM_PORT_BASE	EQU	0A4h
 
 ; BASICÇ©ÇÁÇÃEMMì«Ç›çûÇ›
 ; USR($xxxx, F$)
@@ -131,6 +131,8 @@ EMM_NEXT_FILE_EXIST:
 @@:
 	LD	A, (MZT_MODE)
 	OR	A
+	JR	Z, @f
+	CP	0FFh
 	JR	Z, @f
 	LD	A, 0FEh
 @@:
