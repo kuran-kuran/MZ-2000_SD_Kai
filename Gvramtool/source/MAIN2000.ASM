@@ -1,5 +1,6 @@
 ; LIMIT$97FF (LZEを使う)
 ;LZEBUF 9800h～B7FFh (8192Bytes)
+;FONT   9F80h～B7FFh (6272Bytes)
 ; LIMIT$B7FF (LZEを使わない)
 ;PRG    B800h～
 ;STACK  BF00h～BFFFh
@@ -23,15 +24,32 @@
 	JP	DRAW_MMZ			; USR($B824)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
 	JP	SD_USR_NEXT_FILE_EXIST		; USR($B827,R$)	MZ2000_SD連結ファイルの次のデータがあるか
 	JP	DRAW_MMZ_FILE			; USR($B82A,F$)	指定されたMMZファイルを読み込み画像1画面分表示
+	RET
+	NOP
+	NOP					; USR($B82D)	未使用
+	; WICS用
+	LD	DE, 0A7E0h
+	JP	SD_USR_OPEN_CONCAT		; WICS用 USR($B830,0)
+	LD	DE, 0A7FFh
+	JP	SD_USR_NEXT_FILE_EXIST		; WICS用 USR($B836,0)
 	; BASIC EMM CALL ADDRESS
-	; 0C83Ch
-	JP	EMM_USR_OPEN_CONCAT		; USR($B82C,F$) MZ2000_SD連結ファイルオープン
-	JP	EMM_USR_READ_CONCAT_1BLOCK	; USR($B82F)    MZ2000_SD連結ファイルロード
-	JP	EMM_SKIP_CONCAT_1BLOCK		; USR($B832)    MZ2000_SD連結ファイルスキップ
-	JP	EMM_USR_FIND_CONCAT_1BLOCK	; USR($B835,F$) MZ2000_SD連結ファイル検索
-	JP	EMM_TOP_CONCAT			; USR($B838)    MZ2000_SD連結ファイル先頭へシーク
-	JP	EMM_DRAW_MMZ			; USR($B83B)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
-	JP	EMM_USR_NEXT_FILE_EXIST		; USR($B83E,R$) MZ2000_SD連結ファイルの次のデータがあるか
+	JP	EMM_USR_OPEN_CONCAT		; USR($B83C,F$) MZ2000_SD連結ファイルオープン
+	JP	EMM_USR_READ_CONCAT_1BLOCK	; USR($B83F)    MZ2000_SD連結ファイルロード
+	JP	EMM_SKIP_CONCAT_1BLOCK		; USR($B842)    MZ2000_SD連結ファイルスキップ
+	JP	EMM_USR_FIND_CONCAT_1BLOCK	; USR($B845,F$) MZ2000_SD連結ファイル検索
+	JP	EMM_TOP_CONCAT			; USR($B848)    MZ2000_SD連結ファイル先頭へシーク
+	JP	EMM_DRAW_MMZ			; USR($B84B)    SD_USR_OPEN_CONCATでOPEN済みの連結ファイル内のMMZ画像1画面分表示
+	JP	EMM_USR_NEXT_FILE_EXIST		; USR($B84E,R$) MZ2000_SD連結ファイルの次のデータがあるか
+	; WICS EMM用
+	LD	DE, 0A7E0h
+	JP	EMM_USR_OPEN_CONCAT		; WICS用 USR($B851,0)
+	LD	DE, 0A7FFh
+	JP	EMM_USR_NEXT_FILE_EXIST		; WICS用 USR($B857,0)
+	; FONT
+	JP	GET_LENGTH_BASIC		; C$=CHR$(ID):USR($B85D,C$) 文字数取得
+	JP	DRAWFONT_ALL_BASIC		; C$=CHR$(X)+CHR$(Y)+CHR(C)+CHR$(R)+CHR$(ID):USR($B860,C$)
+	JP	DRAWFONT_BASIC			; C$=CHR$(X)+CHR$(Y)+CHR(C)+CHR$(R)+CHR$(ID)+CHR$(I):USR($B863,C$)
+	JP	ERASE_BASIC			; C$=CHR$(ID):USR($B866,C$)
 
 ; GVRAMにあるデータをRAMに転送する
 ; GVRAM to RAM 0C000h～ 16000bytes
@@ -225,20 +243,32 @@ RESTORE_STACK3:
 
 ; IYの場所にAを16ビット拡張してセットする
 PUT_WIDTHX2:
-	LD	IX, WIDTHX2TABLE
-	PUSH	DE
-	LD	D, 0
-	LD	E, A	; DE=A
-	SLA	E
-	RL	D	; DE=DE*2
-	ADD	IX, DE	; IX=WIDTHX2TABLE+DE*2
-	POP	DE
-	LD	A, (IX)
-	LD	(IY), A
+	PUSH	HL
+	PUSH	BC
+	; A左4ビット → H8ビット
+	LD	B, 4
+@@:
+	SLA	A
+	PUSH	AF
+	RL	H
+	POP	AF
+	RL	H
+	DJNZ	@b
+	; A右4ビット → L8ビット
+	LD	B, 4
+@@:
+	SLA	A
+	PUSH	AF
+	RL	L
+	POP	AF
+	RL	L
+	DJNZ	@b
+	LD	(IY), L
 	INC	IY
-	LD	A, (IX + 1)
-	LD	(IY), A
+	LD	(IY), H
 	DEC	IY
+	POP	BC
+	POP	HL
 	RET
 
 ; デコードする
@@ -251,44 +281,11 @@ DECORD:
 BACKUP_PORT_0E8:
 	DB	0
 
-WIDTHX2TABLE:
-        DB 000h, 000h, 003h, 000h, 00Ch, 000h, 00Fh, 000h, 030h, 000h, 033h, 000h, 03Ch, 000h, 03Fh, 000h
-        DB 0C0h, 000h, 0C3h, 000h, 0CCh, 000h, 0CFh, 000h, 0F0h, 000h, 0F3h, 000h, 0FCh, 000h, 0FFh, 000h
-        DB 000h, 003h, 003h, 003h, 00Ch, 003h, 00Fh, 003h, 030h, 003h, 033h, 003h, 03Ch, 003h, 03Fh, 003h
-        DB 0C0h, 003h, 0C3h, 003h, 0CCh, 003h, 0CFh, 003h, 0F0h, 003h, 0F3h, 003h, 0FCh, 003h, 0FFh, 003h
-        DB 000h, 00Ch, 003h, 00Ch, 00Ch, 00Ch, 00Fh, 00Ch, 030h, 00Ch, 033h, 00Ch, 03Ch, 00Ch, 03Fh, 00Ch
-        DB 0C0h, 00Ch, 0C3h, 00Ch, 0CCh, 00Ch, 0CFh, 00Ch, 0F0h, 00Ch, 0F3h, 00Ch, 0FCh, 00Ch, 0FFh, 00Ch
-        DB 000h, 00Fh, 003h, 00Fh, 00Ch, 00Fh, 00Fh, 00Fh, 030h, 00Fh, 033h, 00Fh, 03Ch, 00Fh, 03Fh, 00Fh
-        DB 0C0h, 00Fh, 0C3h, 00Fh, 0CCh, 00Fh, 0CFh, 00Fh, 0F0h, 00Fh, 0F3h, 00Fh, 0FCh, 00Fh, 0FFh, 00Fh
-        DB 000h, 030h, 003h, 030h, 00Ch, 030h, 00Fh, 030h, 030h, 030h, 033h, 030h, 03Ch, 030h, 03Fh, 030h
-        DB 0C0h, 030h, 0C3h, 030h, 0CCh, 030h, 0CFh, 030h, 0F0h, 030h, 0F3h, 030h, 0FCh, 030h, 0FFh, 030h
-        DB 000h, 033h, 003h, 033h, 00Ch, 033h, 00Fh, 033h, 030h, 033h, 033h, 033h, 03Ch, 033h, 03Fh, 033h
-        DB 0C0h, 033h, 0C3h, 033h, 0CCh, 033h, 0CFh, 033h, 0F0h, 033h, 0F3h, 033h, 0FCh, 033h, 0FFh, 033h
-        DB 000h, 03Ch, 003h, 03Ch, 00Ch, 03Ch, 00Fh, 03Ch, 030h, 03Ch, 033h, 03Ch, 03Ch, 03Ch, 03Fh, 03Ch
-        DB 0C0h, 03Ch, 0C3h, 03Ch, 0CCh, 03Ch, 0CFh, 03Ch, 0F0h, 03Ch, 0F3h, 03Ch, 0FCh, 03Ch, 0FFh, 03Ch
-        DB 000h, 03Fh, 003h, 03Fh, 00Ch, 03Fh, 00Fh, 03Fh, 030h, 03Fh, 033h, 03Fh, 03Ch, 03Fh, 03Fh, 03Fh
-        DB 0C0h, 03Fh, 0C3h, 03Fh, 0CCh, 03Fh, 0CFh, 03Fh, 0F0h, 03Fh, 0F3h, 03Fh, 0FCh, 03Fh, 0FFh, 03Fh
-        DB 000h, 0C0h, 003h, 0C0h, 00Ch, 0C0h, 00Fh, 0C0h, 030h, 0C0h, 033h, 0C0h, 03Ch, 0C0h, 03Fh, 0C0h
-        DB 0C0h, 0C0h, 0C3h, 0C0h, 0CCh, 0C0h, 0CFh, 0C0h, 0F0h, 0C0h, 0F3h, 0C0h, 0FCh, 0C0h, 0FFh, 0C0h
-        DB 000h, 0C3h, 003h, 0C3h, 00Ch, 0C3h, 00Fh, 0C3h, 030h, 0C3h, 033h, 0C3h, 03Ch, 0C3h, 03Fh, 0C3h
-        DB 0C0h, 0C3h, 0C3h, 0C3h, 0CCh, 0C3h, 0CFh, 0C3h, 0F0h, 0C3h, 0F3h, 0C3h, 0FCh, 0C3h, 0FFh, 0C3h
-        DB 000h, 0CCh, 003h, 0CCh, 00Ch, 0CCh, 00Fh, 0CCh, 030h, 0CCh, 033h, 0CCh, 03Ch, 0CCh, 03Fh, 0CCh
-        DB 0C0h, 0CCh, 0C3h, 0CCh, 0CCh, 0CCh, 0CFh, 0CCh, 0F0h, 0CCh, 0F3h, 0CCh, 0FCh, 0CCh, 0FFh, 0CCh
-        DB 000h, 0CFh, 003h, 0CFh, 00Ch, 0CFh, 00Fh, 0CFh, 030h, 0CFh, 033h, 0CFh, 03Ch, 0CFh, 03Fh, 0CFh
-        DB 0C0h, 0CFh, 0C3h, 0CFh, 0CCh, 0CFh, 0CFh, 0CFh, 0F0h, 0CFh, 0F3h, 0CFh, 0FCh, 0CFh, 0FFh, 0CFh
-        DB 000h, 0F0h, 003h, 0F0h, 00Ch, 0F0h, 00Fh, 0F0h, 030h, 0F0h, 033h, 0F0h, 03Ch, 0F0h, 03Fh, 0F0h
-        DB 0C0h, 0F0h, 0C3h, 0F0h, 0CCh, 0F0h, 0CFh, 0F0h, 0F0h, 0F0h, 0F3h, 0F0h, 0FCh, 0F0h, 0FFh, 0F0h
-        DB 000h, 0F3h, 003h, 0F3h, 00Ch, 0F3h, 00Fh, 0F3h, 030h, 0F3h, 033h, 0F3h, 03Ch, 0F3h, 03Fh, 0F3h
-        DB 0C0h, 0F3h, 0C3h, 0F3h, 0CCh, 0F3h, 0CFh, 0F3h, 0F0h, 0F3h, 0F3h, 0F3h, 0FCh, 0F3h, 0FFh, 0F3h
-        DB 000h, 0FCh, 003h, 0FCh, 00Ch, 0FCh, 00Fh, 0FCh, 030h, 0FCh, 033h, 0FCh, 03Ch, 0FCh, 03Fh, 0FCh
-        DB 0C0h, 0FCh, 0C3h, 0FCh, 0CCh, 0FCh, 0CFh, 0FCh, 0F0h, 0FCh, 0F3h, 0FCh, 0FCh, 0FCh, 0FFh, 0FCh
-        DB 000h, 0FFh, 003h, 0FFh, 00Ch, 0FFh, 00Fh, 0FFh, 030h, 0FFh, 033h, 0FFh, 03Ch, 0FFh, 03Fh, 0FFh
-        DB 0C0h, 0FFh, 0C3h, 0FFh, 0CCh, 0FFh, 0CFh, 0FFh, 0F0h, 0FFh, 0F3h, 0FFh, 0FCh, 0FFh, 0FFh, 0FFh
-
 INCLUDE "lzdec.mac"
 INCLUDE "MZ2000SD.ASM"
 INCLUDE "EMM.ASM"
 INCLUDE "MMZDECORD2000.ASM"
+INCLUDE "FONT.ASM"
 
 	ORG	0C000h
 STACK:

@@ -120,20 +120,22 @@ PUT16x8_Color:
 	RET
 
 ;16x8ï\é¶Çì]ëóÇ∑ÇÈ
-;DE: POSITION(2ÇÃî{êî)
+;DE: POSITION
 ;HL: PATTERN
 ;îjâÛ A
 ;     HL=HL+16
 PUT16x8:
+	PUSH	BC
 	PUSH	DE
 	PUSH	HL
 	LD	(PUT16x8_RESTORE_STACK + 1), SP
 	LD	SP, HL
 	EX	DE, HL
-	REPT 7
+	LD	B, 7
+@@:
 	POP	DE
 	LD	(HL), E
-	INC	L
+	INC	HL
 	LD	(HL), D
 	INC	HL
 	; HL=HL+78 30clock
@@ -143,15 +145,16 @@ PUT16x8:
 	LD	A, H	; 4
 	ADC	A, 0	; 7
 	LD	H, A	; 4
-	ENDM
+	DJNZ	@b
 	POP	DE
 	LD	(HL), E
-	INC	L
+	INC	HL
 	LD	(HL), D
 PUT16x8_RESTORE_STACK:
 	LD	SP, 0000
 	POP	HL
 	POP	DE
+	POP	BC
 	; HL=HL+16 30clock
 	LD	A, L	; 4
 	ADD	A, 16	; 7

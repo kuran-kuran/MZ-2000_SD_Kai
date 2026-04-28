@@ -140,12 +140,18 @@ EMM_NEXT_FILE_EXIST:
 
 ; 破壊 A, B, HL
 EMM_READ_HEADER:
+	; 24バイト読み込む
 	LD	HL, MZT_HEADER
-	LD	B, 128
+	LD	B, 24
 @@:
 	IN	A, (EMM_PORT_BASE + 3)
 	LD	(HL), A
 	INC	HL
+	DJNZ	@b
+	; 104バイト読み飛ばす
+	LD	B, 104
+@@:
+	IN	A, (EMM_PORT_BASE + 3)
 	DJNZ	@b
 	RET
 
@@ -177,5 +183,5 @@ MZT_ADDRESS:
 	DW	0
 MZT_EXECUTE:
 	DW	0
-MZT_RESERVED:
-	DS	104
+;MZT_RESERVED:
+;	DS	104
